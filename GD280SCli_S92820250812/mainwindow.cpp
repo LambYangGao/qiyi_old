@@ -14,7 +14,6 @@
 #include "gd280slensdata.h"
 
 QReadWriteLock hidLock;
-//QReadWriteLock ImgLock;
 QReadWriteLock netBufLock;
 
 pthread_mutex_t gTrackingMutex;
@@ -109,9 +108,8 @@ MainWindow::MainWindow(QWidget *parent)
 #endif
     // 启动跟踪功能
     // trackerThd->bTrackerStart = true;
-     trackerThd->trackingMethod = TRACKING_METHOD_TOPHAT706;
+    trackerThd->trackingMethod = TRACKING_METHOD_TOPHAT706;
     trackerThd->bTrackerStart = false;
-//    trackerThd->trackingMethod = TRACKING_METHOD_NONE;
 #ifndef SIMUCAMERA
     //on_pbRec_clicked();  // 开始录像
 #endif
@@ -127,7 +125,6 @@ MainWindow::~MainWindow()
     workStateLoopThd->bRunflag = false;
     hid->runflag=false;
     hid->quit();
-
     //delete(pTheo_PP_DLL);
     delete ui;
 }
@@ -286,10 +283,7 @@ void MainWindow::connectPtzAUc()
     else
     {
         connectFlag_A = true;
-        /*ptzCmdStop[6]=0xff & ( ptzCmdStop[1]+ ptzCmdStop[2]+ ptzCmdStop[3]+ ptzCmdStop[4]+ ptzCmdStop[5]);
-        udpSocket_A->write((char *)ptzCmdStop,sizeof(ptzCmdStop));*/
         qDebug()<<tr("GD_A connect OK");
-        //QMessageBox::warning(this,tr("Tips"),tr("connect server success"),QMessageBox::Yes,QMessageBox::No);
     }
 }
 
@@ -323,10 +317,7 @@ void MainWindow::connectPtzBUc()
     else
     {
         connectFlag_B = true;
-        /*ptzCmdStop[6]=0xff & ( ptzCmdStop[1]+ ptzCmdStop[2]+ ptzCmdStop[3]+ ptzCmdStop[4]+ ptzCmdStop[5]);
-        udpSocket_B->write((char *)ptzCmdStop,sizeof(ptzCmdStop));*/
         qDebug()<<tr("GD_B connect OK");
-        //QMessageBox::warning(this,tr("Tips"),tr("connect server success"),QMessageBox::Yes,QMessageBox::No);
     }
 }
 
@@ -462,18 +453,6 @@ void MainWindow::initGlobalParam()
     mExpo=4.5;
     char str[20];
     sprintf(str,"%.1f",mExpo);
-    //ui->le_setStickExpo->setText(str);
-    /*
-    titleLabel = new QLabel;//定义一个label
-    titleLabel->setMargin(2);
-    QFont ft("Microsoft YaHei", 10, 75);;
-
-    titleLabel->setFont(ft);
-    //titleLabel->setStyleSheet("color:red;");
-    titleLabel->setText("启动完成!");//label显示内容
-    statusBar()->addWidget(titleLabel);//将label加到状态栏上
-    */
-
     mAEJoyCorrect.dblA = 0;//中心引导修正量
     mAEJoyCorrect.dblE = 0;
 
@@ -483,12 +462,8 @@ void MainWindow::initGlobalParam()
     mStickBtn = 0;
     mStickBtn2 =0;
 
-    //PIDInit(&PidX,0,PID_X_SCALE,PID_X_P,PID_X_I,PID_X_D);
-    //PIDInit(&PidY,0,PID_Y_SCALE,PID_Y_P,PID_Y_I,PID_Y_D);
     PIDInit2(&PidX,0,mPid_X_Scale,mPid_X_P,mPid_X_I,mPid_X_D,mPidMaxOut);
     PIDInit2(&PidY,0,mPid_Y_Scale,mPid_Y_P,mPid_Y_I,mPid_Y_D,mPidMaxOut);
-    //PIDInit2(&PidX,0,0,0.2,0.3,0.2);
-    //PIDInit2(&PidY,0,0,0.5,0.5,0.2);
 
     mJoy_x = 80;
     mJoy_y = 80;
@@ -510,31 +485,12 @@ void MainWindow::initGlobalParam()
 
 void MainWindow::initControlStat()
 {
-    //ui->lineEdit_IP->setText(rtrim(serverIp));
-    //ui->cbx_CfgLocal->setCurrentIndex(localRoleFlag);
-    //char str[64];
-    //sprintf(str,"%.3f",dd_diffx);
-    //ui->le_setDirecionDiff->setText(str);
-    //ui->le_setDirecionDiff->setVisible(0);  //不做配置文件方位补偿功能
-    //ui->label_21->setVisible(0);
-    //ui->pbSSetDiffX->setVisible(0);
-    //sprintf(str,"%.3f",dd_diffy);
-    //ui->le_setPitchDiff->setText(str);
-
-    //ui->pbConnect->setDisabled(true);
-    //ui->pbDisConnect->setDisabled(true);
-    //ui->pbConnect_B->setDisabled(true);
-    //ui->pbDisConnect_B->setDisabled(false);
-
     ui->lbMousePosition_x->setVisible(0);   //只在调试时使用，正式版本不打开
     ui->lbMousePosition_y->setVisible(0);
     ui->label_5->setVisible(0);
     ui->label_6->setVisible(0);
     ui->lbDiffX->setVisible(0);   //只在调试时使用，正式版本不打开
     ui->lbDiffY->setVisible(0);   //只在调试时使用，正式版本不打开
-    //ui->pbSetZero->setVisible(0);
-
-    //ui->pbOnOffColor->setVisible(1);
 
     ui->lbl_lenVal->setVisible(1);
     ui->lbl_focalVal->setVisible(1);
@@ -551,8 +507,6 @@ void MainWindow::initControlStat()
     ui->lblPadDirection->installEventFilter(this);//安装事件过滤器
     ui->lblPadDirection_B->installEventFilter(this);//安装事件过滤器
     ui->lbl_SimJoystick->installEventFilter(this);//安装事件过滤器
-    //ui->lbl_padAngleGap->installEventFilter(this);//安装事件过滤器
-    //ui->lbl_stickEXPO->installEventFilter(this);//安装事件过滤器
 
     QIntValidator* validv = new QIntValidator;
     validv->setRange(1, 16);//可以改成（-255,255），这样就是负数
@@ -562,44 +516,14 @@ void MainWindow::initControlStat()
 
     QIntValidator* validv3 = new QIntValidator;
     validv3->setRange(0, 59);//
-/*
-    QIntValidator* validv4 = new QIntValidator;
-    validv4->setRange(0, 360);//
-    ui->le_setDirecion ->setValidator(validv4);
-    ui->le_setDirecion->setPlaceholderText("0~360");
-    ui->le_setPitch ->setValidator(validv4);
-    ui->le_setPitch->setPlaceholderText("-180~180");
-*/
-
-    //ui->tabWidConfig->removeTab(4);     //关闭debug页
-
     ui->pbConfigSave->setEnabled(false);
     ui->pbOsdWordSave->setEnabled(false);
     ui->leRecFileDir->setEnabled(false);
     ui->leSetIP->setEnabled(false);
-    //ui->leSetIPMask->setEnabled(false);
-    //ui->leSetIPGageway->setEnabled(false);
+
     ui->leSetHdCamIP->setEnabled(false);
     ui->leSetHdCamPort->setEnabled(false);
-
-    //ui->pb_ReplayStart->setEnabled(false);
-    //ui->pb_ReplayPause->setEnabled(false);
-    //ui->pb_ReplayStop->setEnabled(false);
-    /*ui->lblTrackingFps->setVisible(false);
-    ui->label_trackfps->setVisible(false);
-    ui->gbx_RoiSize->setEnabled(false);*/
-    //ui->pbIrConfigSave->setDisabled(true);
-    //ui->pbIrConfigSave->setVisible(false);
-
     ui->cbxCrosser->setChecked(true);
-
-    /*ui->checkBoxTheoGuid->setEnabled(false);
-    ui->checkBoxCenterGuid->setEnabled(false);
-    ui->checkBoxTheoGuid->setChecked(true);
-    ui->checkBoxCenterGuid->setChecked(true);*/
-    //ui->pbSyncSystime->setEnabled(false);
-    /*ui->cbxMarkline->setChecked(true);
-    ui->cbxRoiBox->setChecked(true);*/
     ui->lbl_Version->setText( "版本:"  __DATE__ " " __TIME__);
 
     QMainWindow::setMouseTracking(true);
@@ -615,7 +539,6 @@ void MainWindow::initControlStat()
 void MainWindow::initTimerAndThread()
 {
 
-    //pnetworkComm = new NetworkComm(localRoleFlag);
 #if 1
     timerTheo_pp = new QTimer(); // 主控制循环
     connect(timerTheo_pp,SIGNAL(timeout()),this,SLOT(Theo_timeOut()));
@@ -635,13 +558,7 @@ void MainWindow::initTimerAndThread()
 
 
     hid= new HidProcThd;
-    //connect(hid, SIGNAL(sig_UpdateJoystick()), this, SLOT(slotGetUpdateJoystick()));
     hid->start();
-    //connect(this,SIGNAL(mouseMove(QMouseEvent *)),this,SLOT(draw(QMouseEvent *)));
-
-    //pTheo_PP_DLL = new Theo_PP_DLL();
-
-    //strcpy(serverIp,"192.168.1.114");
     // 创建跟踪线程
     trackerThd = new TrackerThread;
     connect(trackerThd, SIGNAL(sig_UpdateTrackingBox(int,int,int,int,int)), this, SLOT(slotUpdateTrackingBox(int,int,int,int,int)));
@@ -653,7 +570,6 @@ void MainWindow::initTimerAndThread()
 
     timerDelayPid = new QTimer();
     connect(timerDelayPid,SIGNAL(timeout()),this,SLOT(delayPid_timeOut()));
-    //timerDelayPid->start(20);
 
 //#ifndef SIMUCAMERA
     timerChkIfOffline = new QTimer();  // 离线检测
@@ -674,20 +590,7 @@ void MainWindow::initTimerAndThread()
 
 void MainWindow::closeEvent(QCloseEvent *event)
 {
-#if 0
-    QMessageBox::StandardButton button;
-    button = QMessageBox::question(this, tr("退出程序"),
-        QString(tr("警告：程序正在运行中，是否结束操作退出?")),
-        QMessageBox::Yes | QMessageBox::No);
 
-    if (button == QMessageBox::No) {
-        event->ignore();  //忽略退出信号，程序继续运行
-    }
-    else if (button == QMessageBox::Yes) {
-        fullscreen.close();
-        event->accept();  //接受退出信号，程序退出
-    }
-#endif
 }
 
 void MainWindow::on_lineEdit_IP_returnPressed()
@@ -742,7 +645,6 @@ void MainWindow::calcScreenPos(int * x_out,int * y_out,int x_in,int y_in,int scr
 void MainWindow::getMouseOnVirtualJoyStk(QMouseEvent *event)
 {
     QPoint p_SimuStick = event->pos() - ui->tabWidConfig->pos();
-    //QPoint p_SimuStick = event->pos() - ui->groupBox_10->pos();
     if(p_SimuStick.x() > 20 && p_SimuStick.x() < ui->lbl_SimJoystick->width()+20 && p_SimuStick.y() > 0 && p_SimuStick.y() < ui->lbl_SimJoystick->height())
     {
         if (event->button() == Qt::LeftButton)
@@ -835,7 +737,6 @@ void MainWindow::mouseMoveEvent(QMouseEvent *event)
     float rate_w=0,rate_h=0;
 
     QPoint p_re = event->pos() - ui->lblPad->pos();
-    //qDebug()<<"mouse posX:"<<posX<<"    posY:"<<posY;
     camWidth = IMAGE_PIXEL_WIDTH;
     camHeight = IMAGE_PIXEL_HEIGHT;
     rate_w = (float)ui->lblPad->width()/(float)camWidth;
@@ -861,7 +762,6 @@ void MainWindow::mouseMoveEvent(QMouseEvent *event)
 
 void MainWindow::mousePressEvent(QMouseEvent *event)
 {//单击
-    //if(event->pos().x() > 20 && (event->pos().y() > 20) && event->pos().x() < 950 && (event->pos().y() < 518))
     if(event->pos().x() > 20 && (event->pos().y() > 20) && event->pos().x() < 620 && (event->pos().y() < 320))
     {
         ui->rb_selGDA->setChecked(true);
@@ -870,7 +770,6 @@ void MainWindow::mousePressEvent(QMouseEvent *event)
         ui->lblPad->setFrameShadow(QFrame::Raised);
         ui->lblPad_B->setFrameShadow(QFrame::Sunken);
     }
-    //else if(event->pos().x() > 700 && (event->pos().y() > 20) && event->pos().x() < 1890 && (event->pos().y() < 518))
     else if(event->pos().x() > 700 && (event->pos().y() > 20) && event->pos().x() < 1890 && (event->pos().y() < 320))
     {
         ui->rb_selGDB->setChecked(true);
@@ -979,41 +878,15 @@ void MainWindow::mousePressEvent(QMouseEvent *event)
                 ui->te_Output->append("光电A跟踪状态：小目标精确跟踪");
                 ui->cbxStartTracking->setChecked(true);
 
-
-                // 启动KCF跟踪
-               // qDebug()<<"Clicked r_x:"<<posX<<"    posY:"<<posY;
-               // trackerThd->roi_min_width = posX-50;
-               // trackerThd->roi_min_height = posY-40;
-               // trackerThd->bTrackerStart = true;
-               // trackerThd->boxChanged = true;
-               // trackerThd->trackingMethod = TRACKING_METHOD_KCF;
-               // trackerThd->roi_width = 100;
-               // trackerThd->roi_height = 80 ;
-               // PidX.enable_I_flag = false;
-               // PidY.enable_I_flag = false;
-               // timerDelayPid->start(2000);
-
-                //LabStatebarInfo->setText("跟踪状态：跟踪中");
-                /*ui->lblTrackingFps->setEnabled(true);
-                ui->lblTrackingFps->setVisible(true);
-                ui->label_trackfps->setVisible(true);*/
             }
             else if( 2 == btnStatus)  // 右键点击 - 停止跟踪
             {    
                 trackerThd->bTrackerStart = false;
                 on_pbStop_pressed();      // 停止云台运动
                 ui->cbxStartTracking->setChecked(false);
-                //ui->lblTrackingFps->setText("0");
-                //LabStatebarInfo->setText("跟踪状态：结束");
-                /*ui->lblTrackingFps->setText("0");
-                ui->lblTrackingFps->setEnabled(false);
-                ui->lblTrackingFps->setVisible(false);
-                ui->label_trackfps->setVisible(false);*/
                 btnStatus = 0;
                 PIDReset2(&PidX);
                 PIDReset2(&PidY);
-                //PIDReset2(&sysConfig.PidXSpeed);
-                //PIDReset2(&sysConfig.PidYSpeed);
                 ui->te_Output->append("光电A跟踪状态：停止");
             }
             ui->lblPad->update();
@@ -1039,7 +912,6 @@ void MainWindow::mousePressEvent(QMouseEvent *event)
                 // 确保选择了光电B
                 ui->rb_selGDB->setChecked(true);
 
-                // 计算鼠标在图像中的实际坐标
                 int camWidth = IMAGE_PIXEL_WIDTH;
                 int camHeight = IMAGE_PIXEL_HEIGHT;
                 float rate_w = (float)ui->lblPad_B->width()/(float)camWidth;
@@ -1077,21 +949,6 @@ void MainWindow::mousePressEvent(QMouseEvent *event)
                     cv::Point2f center = cv::Point2f(posX, posY);
                     trackerThd->setCustomCenter(center);
 
-                    // qDebug()<<"Clicked r_x:"<<posX<<"    posY:"<<posY;
-                    // trackerThd->roi_min_width = posX-50;
-                    // trackerThd->roi_min_height = posY-40;
-                    // trackerThd->bTrackerStart = true;
-                    // trackerThd->boxChanged = true;
-                    // trackerThd->trackingMethod = TRACKING_METHOD_KCF;
-                    // trackerThd->roi_width = 100;
-                    // trackerThd->roi_height = 80 ;
-
-
-                    // // 重置PID控制器
-                    // PidX.enable_I_flag = false;
-                    // PidY.enable_I_flag = false;
-                    // timerDelayPid->start(2000);
-
                     ui->te_Output->append("光电B跟踪状态：小目标精确跟踪");
                     ui->cbxStartTracking->setChecked(true);
                     ui->rb_SelDetectMtd2->setChecked(true);  //由于有时候没有目标框，添加这个
@@ -1115,7 +972,6 @@ void MainWindow::mousePressEvent(QMouseEvent *event)
 
 void MainWindow::mouseReleaseEvent(QMouseEvent *event)
 {//释放
-    //setMouseState(MouseState::Release, 0);
     btnStatus=0;
     mJoy_x = 80;
     mJoy_y = 80;
@@ -1124,7 +980,6 @@ void MainWindow::mouseReleaseEvent(QMouseEvent *event)
 
 void MainWindow::mouseDoubleClickEvent(QMouseEvent *event)
 {//双击
-    // 如果是鼠标左键按下
     if (event->button() == Qt::LeftButton){
         //qDebug() << "left double click";
         //setMouseState(MouseState::L_DC, 0);
@@ -1148,30 +1003,6 @@ void MainWindow::wheelEvent(QWheelEvent *event)
         if(scale>40) scale--;
     }
 }
-
-
-#if 0
-void MainWindow::on_pushButton_Send_clicked()
-{
-    /*
-    qint64 writeResult = udpSocket->write(ui->textEdit_Send->toPlainText().toLatin1());
-    bool BoolFlush = udpSocket->flush();
-    if(writeResult != -1 && BoolFlush==1)
-    {
-        if(writeResult==0)
-        {
-            QMessageBox::warning(this,"warning",tr("write data returon 0"),QMessageBox::Yes,QMessageBox::No);
-        }
-        QMessageBox::warning(this,"warning",tr("write data success "),QMessageBox::Yes,QMessageBox::No);
-    }
-    */
-       QByteArray datagram;
-       QHostAddress address;
-       address.setAddress(serverIp);//发送者要把数据发送到的ip地址
-       udpSocket->writeDatagram(datagram,address,serverPort);//发送者把数据发送的端口号，需要接受者绑定该端口号
-
-}
-#endif
 
 QString MainWindow::uncharToQstring(unsigned char * id,int len)
 {
@@ -1210,86 +1041,7 @@ void MainWindow::sendCmd()
 
 void MainWindow::on_SendText_changed()
 {
-    //ui->pushButton_Send->setEnabled(true);
 }
-
-// void MainWindow::CenterSocket_Read_Data()
-// {
-//     double direction=0;
-//     double pitch=0;
-//     int zkDist = 0;
-//     int camVal=0;
-//     int selDetectFunc = 0;
-//     int autoZoomVal = 10209;
-//     bool chktrkflag = false;
-
-//     if(connectRtspFlag_A == false && connectRtspFlag_B == false)
-//     {
-//         return;
-//     }
-
-//     int retu = pnetworkComm->centerSocket_Read_Data();
-//     if(retu != 0 ) return;
-
-//     ui->lbRecvZhiKongPkt->setText(QString::number(pnetworkComm->recvZhiKongPktCnt));
-
-//     if(ui->cbxIgnorCenterCmd->isChecked() == true)  //超越指控命令
-//     {
-//         return;
-//     }
-
-//     // 获取位掩码标志位
-//     uint8_t pktTypeFlag = pnetworkComm->msgFromZhiKong.pktType;
-//     uint16_t mouseX = pnetworkComm->msgFromZhiKong.shubiaox;
-//     uint16_t mouseY = pnetworkComm->msgFromZhiKong.shubiaoy;
-//     uint8_t suanfaValue = pnetworkComm->msgFromZhiKong.suanfa;
-
-//     // qDebug() << "收到指控数据 - pktType:" << pktTypeFlag << ", suanfa:" << suanfaValue << ", mouse:(" << mouseX << "," << mouseY << ")";
-
-//     // 按位检查
-//     // bit0: cmdId
-//     if(pktTypeFlag & 0x01)
-//     {
-//         handleCmdIdProcessing();
-//     }
-
-//     // bit1: startTracking
-//     if(pktTypeFlag & 0x02)
-//     {
-//         handleStartTrackingProcessing();
-//     }
-
-//     // bit2: suanfa
-//     if(pktTypeFlag & 0x04)
-//     {
-//         handleAlgorithmProcessing();
-//     }
-
-//     // bit3: fangweifuyangjuli
-//     if(pktTypeFlag & 0x08)
-//     {
-//         handleDirectionPitchDistanceProcessing();
-//     }
-
-//     // bit4: 变倍对焦
-//     if(pktTypeFlag & 0x10)
-//     {
-//         handleZoomFocusProcessing();
-//     }
-
-//     // bit5: shubiao 鼠标点击
-//     if(pktTypeFlag & 0x20)
-//     {
-//         handleMouseProcessing();
-//     }
-
-//     // 如果没有任何标志位被设置，则按默认cmdId方式处理
-//     // if(pktTypeFlag == 0)
-//     // {
-//     //     qDebug() << "pktType为0，按默认cmdId方式处理";
-//     //     handleCmdIdProcessing();
-//     // }
-// }
 
 void MainWindow::CenterSocket_Read_Data()
 {
@@ -1363,243 +1115,6 @@ void MainWindow::CenterSocket_Read_Data()
     }
 }
 
-#if 0
-void MainWindow::CenterSocket_Read_Data()
-{
-    double direction=0;
-    double pitch=0;
-    int zkDist = 0;
-    int camVal=0;
-    int selDetectFunc = 0;
-    int autoZoomVal = 10209;
-    bool chktrkflag = false;
-
-    if(connectRtspFlag_A == false && connectRtspFlag_B == false)
-    {
-        return;
-    }
-
-    int retu = pnetworkComm->centerSocket_Read_Data();
-    if(retu != 0 ) return;
-
-    ui->lbRecvZhiKongPkt->setText(QString::number(pnetworkComm->recvZhiKongPktCnt));
-
-
-    camVal = pnetworkComm->msgFromZhiKong.zkBianBeiDuiJiao;
-
-    if(ui->cbxIgnorCenterCmd->isChecked() == true)  //超越指控命令
-    {
-        return;
-    }
-    ui->cbxStartTracking->setChecked(bool((pnetworkComm->msgFromZhiKong.startTracking)&0x1));
-    selDetectFunc = (pnetworkComm->msgFromZhiKong.startTracking>>1)&0x3 ; //bits 1~2 是算法选择
-    switch(pnetworkComm->msgFromZhiKong.cmdId)
-    {
-        case 0: //待机
-            sendSetCmd(PKT_TYPE_PTZSTOP,0);
-            ui->rb_trackStick->setChecked(true);
-            pnetworkComm->msgToZhiKong.status = 0;
-            //pnetworkComm->msgFromZhiKong.zkDistence = 0;
-            //zkDist = 0;
-/*
-            ui->rb_SelDetectNone->setChecked(true);
-            ui->cbxStartTracking->setChecked(false);
-            trackerThd->bTrackerStart = false;
-            trackerThd->trackingMethod = TRACKING_METHOD_NONE;
-*/
-            if( 0 == selDetectFunc )
-            {
-                ui->rb_SelDetectNone->setChecked(true);
-                trackerThd->bTrackerStart = false;
-                trackerThd->trackingMethod = TRACKING_METHOD_NONE;
-                operateMode = OPMODE_STICK;
-            }
-            else if( 1 == selDetectFunc && trackerThd->trackingMethod != TRACKING_METHOD_IR_SMALL)
-            {
-                ui->rb_SelDetectMtd1->setChecked(true);
-                trackerThd->bTrackerStart = true;
-                // trackerThd->trackingMethod = TRACKING_METHOD_DETECT;
-                trackerThd->trackingMethod = TRACKING_METHOD_TOPHAT;
-                // trackerThd->trackingMethod = TRACKING_METHOD_IR_SMALL;
-                operateMode = OPMODE_MARKING;
-            }
-            else if( 2 == selDetectFunc && trackerThd->trackingMethod != TRACKING_METHOD_IR_SMALL)
-            {
-                ui->rb_SelDetectMtd2->setChecked(true);
-                trackerThd->bTrackerStart = true;
-                trackerThd->trackingMethod = TRACKING_METHOD_TOPHAT;
-                // trackerThd->trackingMethod = TRACKING_METHOD_IR_SMALL;
-                operateMode = OPMODE_MARKING;
-            }
-
-            convZhiKongCameraCmd(camVal);
-            ui->lbRecvZhiKongDist->setText(QString::number(zkDist) +'m');
-            break;
-
-        case 1: //指控引导
-            direction = pnetworkComm->msgFromZhiKong.zkFangWei / ANGLENET2DEG;
-            pitch=pnetworkComm->msgFromZhiKong.zkFuYang /ANGLENET2DEG;
-            zkDist = pnetworkComm->msgFromZhiKong.zkDistence;
-            ui->lbRecvZhiKongFangwei->setText(QString::number(direction,'f',2) );
-            ui->lbRecvZhiKongFuyang->setText(QString::number(pitch,'f',2));
-            ui->lbRecvZhiKongDist->setText(QString::number(zkDist) +'m');
-//qDebug()<<"direction:"<<direction <<"   pitch:"<<pitch;
-
-            if(pitch > 270)
-            {
-                pitch = pitch - 360;
-            }
-            if(pitch > 90)
-            {
-                pitch = 90;
-            }
-            else if(pitch < -20)
-                pitch = -20;
-            direction = direction - pGyroComm->msgFromGyro.direction + radar_diffx_A;   //pGyroComm->msgFromGyro.yaw; //雷达叠加了陀螺数据，需要减掉才是车体为参照的方位
-
-            if(direction >= 360) direction = direction - 360;
-            else if(direction <= -360) direction = direction + 360;
-
-            //ui->cbxStartTracking->setChecked(bool((pnetworkComm->msgFromZhiKong.startTracking)&0x1));
-
-
-            //selDetectFunc = (pnetworkComm->msgFromZhiKong.startTracking>>1)&0x3 ; //bits 1~2 是算法选择
-            if( 0 == selDetectFunc )
-            {
-                ui->rb_SelDetectNone->setChecked(true);
-                trackerThd->bTrackerStart = false;
-                trackerThd->trackingMethod = TRACKING_METHOD_NONE;
-            }
-            else if( 1 == selDetectFunc && trackerThd->trackingMethod != TRACKING_METHOD_IR_SMALL)
-            {
-                ui->rb_SelDetectMtd1->setChecked(true);
-                trackerThd->bTrackerStart = true;
-                //trackerThd->trackingMethod = TRACKING_METHOD_DETECT;
-                trackerThd->trackingMethod = TRACKING_METHOD_TOPHAT;
-            }
-            else if( 2 == selDetectFunc && trackerThd->trackingMethod != TRACKING_METHOD_IR_SMALL)
-            {
-                ui->rb_SelDetectMtd2->setChecked(true);
-                trackerThd->bTrackerStart = true;
-                trackerThd->trackingMethod = TRACKING_METHOD_TOPHAT;
-            }
-
-            if( false == ui->cbxStartTracking->isChecked() || pnetworkComm->msgToZhiKong.numOfObj == 0 )
-            {
-                sendPosition(direction, pitch,true,true);
-                /*autoZoomVal = getZoomFromDistance(zkDist);
-                qDebug()<<"===>autoZoomVal:"<<autoZoomVal;
-                gotoNewLen(autoZoomVal);*/
-            }
-            else if( ui->cbxStartTracking->isChecked() && trackerThd->trackingMethod != TRACKING_METHOD_IR_SMALL && ui->rb_SelDetectMtd2->isChecked())
-            {
-                // trackerThd->bTrackerStart = true;
-                // trackerThd->trackingMethod = TRACKING_METHOD_KCF;
-                // trackerThd->roi_min_width = roiBox.x;
-                // trackerThd->roi_min_height = roiBox.y;
-                // trackerThd->roi_width = roiBox.width;
-                // trackerThd->roi_height = roiBox.height ;
-                // trackerThd->boxChanged = true;
-                // PidX.enable_I_flag = false;
-                // PidY.enable_I_flag = false;
-                // timerDelayPid->start(2000);
-
-                // 切到IR_SMALL
-                trackerThd->bTrackerStart = true;
-                trackerThd->trackingMethod = TRACKING_METHOD_IR_SMALL;
-                trackerThd->irParams.tarLmax = 15;
-                trackerThd->irParams.k1 = 3;
-                trackerThd->irParams.k2 = 2;
-                trackerThd->irParams.scoreThreshold = 2.5f;
-
-                trackerThd->roi_width_ = 320;  // IR算法专用ROI窗口大小
-                trackerThd->roi_height_ = 256;
-                // 设置跟踪中心点（从TopHat检测结果中获得）
-                cv::Point2f center = cv::Point2f(roiBox.x + roiBox.width/2,
-                                                roiBox.y + roiBox.height/2);
-                trackerThd->setCustomCenter(center);
-                trackerThd->boxChanged = true;
-                // PID控制器设置
-                PidX.enable_I_flag = false;
-                PidY.enable_I_flag = false;
-                timerDelayPid->start(2000);
-            }
-            //else
-            {
-                convZhiKongCameraCmd(camVal);
-            }
-
-            if(ui->rb_Center->isChecked() == false)
-            {
-                ui->rb_Center->setChecked(true);
-                operateMode = OPMODE_CENTER;
-                pnetworkComm->msgToZhiKong.status = 1;
-            }
-
-            break;
-
-        case 2: break;
-        case 3: //归零
-            /*if(connectFlag_A != false)
-            {
-                 udpSocket_A->write((char *)S9ToZero ,sizeof(S9ToZero));
-            }
-            if(connectFlag_B != false)
-            {
-                 udpSocket_B->write((char *)S9ToZero ,sizeof(S9ToZero));
-            } */
-            ui->rb_trackStick->setChecked(true);
-            operateMode = OPMODE_STICK;
-            pnetworkComm->msgToZhiKong.status = 0;
-            break;
-#if 0
-        case 4:     //将光电1的当前指向设置为xx度
-
-            if(connectFlag_A != false)
-            {
-                 //udpSocket_A->write((char *)S9ResetDirection ,sizeof(S9ResetDirection));
-                if(0x1 == pnetworkComm->msgFromZhiKong.pktType) //校标指令
-                {
-                    uint8_t S9calibDirection[]={0xff, 0x22, 0x00, 0x00, 0x00, 0x00, 0x22};       //置方位0位
-                    S9calibDirection[2] = (pnetworkComm->msgFromZhiKong.zkFangWei>>8)& 0xff;
-                    S9calibDirection[3] = (pnetworkComm->msgFromZhiKong.zkFangWei)& 0xff;
-                    S9calibDirection[6] = 0xff & (S9calibDirection[1]+ S9calibDirection[2]+ S9calibDirection[3]+ S9calibDirection[4]+ S9calibDirection[5]);
-                    udpSocket_A->write((char *)S9calibDirection ,sizeof(S9calibDirection));
-                }
-            }
-            break;
-        case 5:     //将光电2的当前指向设置为xx度
-            if(connectFlag_B != false)
-            {
-                 //udpSocket_B->write((char *)S9ResetDirection ,sizeof(S9ResetDirection));
-                 if(0x1 == pnetworkComm->msgFromZhiKong.pktType) //校标指令
-                 {
-                     uint8_t S9calibDirection[]={0xff, 0x22, 0x00, 0x00, 0x00, 0x00, 0x22};       //置方位0位
-                     S9calibDirection[2] = (pnetworkComm->msgFromZhiKong.zkFangWei>>8)& 0xff;
-                     S9calibDirection[3] = (pnetworkComm->msgFromZhiKong.zkFangWei)& 0xff;
-                     S9calibDirection[6] = 0xff & (S9calibDirection[1]+ S9calibDirection[2]+ S9calibDirection[3]+ S9calibDirection[4]+ S9calibDirection[5]);
-                     udpSocket_B->write((char *)S9calibDirection ,sizeof(S9calibDirection));
-                 }
-            }
-            break;
-#endif
-        case 6:     //不自动转图像跟踪
-            pnetworkComm->msgToZhiKong.switchTrack = 0;
-            break;
-        case 7:     //自动转入图像跟踪
-            pnetworkComm->msgToZhiKong.switchTrack = 1;
-            break;
-        case 10:     //退出程序并关机
-            quitAndShutdown();
-            break;
-        default:
-            break;
-
-    }
-}
-#endif
-
-
 void MainWindow::handleCmdIdProcessing()
 {
     double direction=0;
@@ -1615,99 +1130,11 @@ void MainWindow::handleCmdIdProcessing()
     switch(pnetworkComm->msgFromZhiKong.cmdId)
     {
         case 0: //待机
-//            sendSetCmd(PKT_TYPE_PTZSTOP,0);
-//        if(connectFlag_A != false)
-//        {
-//            udpSocket_A->write((char *)ptzCmdStop,sizeof(ptzCmdStop));
-//        }
-//        if(connectFlag_B != false)
-//        {
-//            udpSocket_B->write((char *)ptzCmdStop,sizeof(ptzCmdStop));
-//        };
             on_pbStop_pressed();      // 停止云台运动
             ui->rb_trackStick->setChecked(true);  //勾选手动模式
             pnetworkComm->msgToZhiKong.status = 0;
 
-            // if( 0 == selDetectFunc )
-            // {
-            //     ui->rb_SelDetectNone->setChecked(true);
-            //     trackerThd->bTrackerStart = false;
-            //     trackerThd->trackingMethod = TRACKING_METHOD_NONE;
-            //     operateMode = OPMODE_STICK;
-            // }
-            // else if( 1 == selDetectFunc && trackerThd->trackingMethod != TRACKING_METHOD_IR_SMALL)
-            // {
-            //     ui->rb_SelDetectMtd1->setChecked(true);
-            //     trackerThd->bTrackerStart = true;
-            //     trackerThd->trackingMethod = TRACKING_METHOD_TOPHAT;
-            //     operateMode = OPMODE_MARKING;
-            // }
-            // else if( 2 == selDetectFunc && trackerThd->trackingMethod != TRACKING_METHOD_IR_SMALL)
-            // {
-            //     ui->rb_SelDetectMtd2->setChecked(true);
-            //     trackerThd->bTrackerStart = true;
-            //     trackerThd->trackingMethod = TRACKING_METHOD_TOPHAT;
-            //     operateMode = OPMODE_MARKING;
-            // }
-
-            // convZhiKongCameraCmd(camVal);
-            // zkDist = pnetworkComm->msgFromZhiKong.zkDistence;
-            // ui->lbRecvZhiKongDist->setText(QString::number(zkDist) +'m');
-            // break;
-
         case 1: //指控引导
-            // direction = pnetworkComm->msgFromZhiKong.zkFangWei / ANGLENET2DEG;
-            // pitch=pnetworkComm->msgFromZhiKong.zkFuYang /ANGLENET2DEG;
-            // zkDist = pnetworkComm->msgFromZhiKong.zkDistence;
-            // ui->lbRecvZhiKongFangwei->setText(QString::number(direction,'f',2) );
-            // ui->lbRecvZhiKongFuyang->setText(QString::number(pitch,'f',2));
-            // ui->lbRecvZhiKongDist->setText(QString::number(zkDist) +'m');
-
-            // if(pitch > 270)
-            // {
-            //     pitch = pitch - 360;
-            // }
-            // if(pitch > 90)
-            // {
-            //     pitch = 90;
-            // }
-            // else if(pitch < -20)
-            //     pitch = -20;
-            // direction = direction - pGyroComm->msgFromGyro.direction + radar_diffx_A;
-
-            // if(direction >= 360) direction = direction - 360;
-            // else if(direction <= -360) direction = direction + 360;
-
-            // if( 0 == selDetectFunc )
-            // {
-            //     ui->rb_SelDetectNone->setChecked(true);
-            //     trackerThd->bTrackerStart = false;
-            //     trackerThd->trackingMethod = TRACKING_METHOD_NONE;
-            // }
-            // else if( 1 == selDetectFunc && trackerThd->trackingMethod != TRACKING_METHOD_IR_SMALL)
-            // {
-            //     ui->rb_SelDetectMtd1->setChecked(true);
-            //     trackerThd->bTrackerStart = true;
-            //     trackerThd->trackingMethod = TRACKING_METHOD_TOPHAT;
-            // }
-            // else if( 2 == selDetectFunc && trackerThd->trackingMethod != TRACKING_METHOD_IR_SMALL)
-            // {
-            //     ui->rb_SelDetectMtd2->setChecked(true);
-            //     trackerThd->bTrackerStart = true;
-            //     trackerThd->trackingMethod = TRACKING_METHOD_TOPHAT;
-            // }
-
-            // if( false == ui->cbxStartTracking->isChecked() || pnetworkComm->msgToZhiKong.numOfObj == 0 )
-            // {
-            //     sendPosition(direction, pitch,true,true);
-            // }
-            // else if( ui->cbxStartTracking->isChecked() && trackerThd->trackingMethod != TRACKING_METHOD_IR_SMALL && ui->rb_SelDetectMtd2->isChecked())
-            // {
-            //     startIRSmallTargetTracking();
-            // }
-
-            // convZhiKongCameraCmd(camVal);
-
             if(ui->rb_Center->isChecked() == false)
             {
                 ui->rb_Center->setChecked(true);    //勾选指控引导
@@ -1739,10 +1166,7 @@ void MainWindow::handleStartTrackingProcessing()
     ui->cbxStartTracking->setChecked(trackingEnabled);
 
     if(trackingEnabled) {
-        // 使用当前算法设置
-        // int selDetectFunc = pnetworkComm->msgFromZhiKong.suanfa;
-        // applyTrackingAlgorithm(selDetectFunc);
-        // ui->te_Output->append(QString("启动跟踪，算法=%1").arg(selDetectFunc));
+
     } else {
         // 停止跟踪
         trackerThd->bTrackerStart = false;
@@ -2040,16 +1464,6 @@ void MainWindow::GyroSocket_Read_Data()
 
 }
 
-/*void printFrame(QByteArray& ba)
-{
-    QString str;
-    for(int i=0; i<ba.size(); i++){
-        str += QString("%1").arg((unsigned char)ba.at(i), 2, 16, QLatin1Char('0') ) + ' ';
-    }
-
-    qDebug() << str;
-} */
-
 //视角计算公式
 //1920      =  2 * arcTan(5.3 /2f)
 //640      =  2 * arcTan(10.88 /2f)
@@ -2059,7 +1473,6 @@ void MainWindow::socket_Read_Data_A()
     if( udpskt == NULL) return;
 
     QByteArray buffer;
-    //uint8_t cmdbuf[7];
     buffer = udpskt->readAll();
     int p=0;
     int direction = 0;
@@ -2067,18 +1480,11 @@ void MainWindow::socket_Read_Data_A()
     int zoomVal = 0;
     int focalVal =0;
     recvPktNum_A++;
-//qDebug()<<"socket_Read_Data_A() recvPktNum_A:"<<recvPktNum_A;
     ui->lbRecvPkt_A->setText(QString::number(recvPktNum_A) );
     if(buffer.length() < 7)
     {
-        //qDebug()<<"ptz buffer len="<<buffer.length();
         return;
     }
-    //qDebug()<<"bufLen:"<<buffer.length();
-    //printFrame(buffer);
-    //QString qstr =  buffer.toHex(' ');
-    //ui->te_Output->append(qstr);
-
     int ch0=0;
     int ch1=0;
     int ch2=0;
@@ -2137,32 +1543,16 @@ void MainWindow::socket_Read_Data_A()
                         zoomVal = ((ch2&0xf)<<12) + ((ch3&0xf)<<8) + ((ch4&0xf)<<4) + (ch5&0xf);
                         if(0 == mFoc_or_zoom_flag )     // 0 is Focal return
                         {
-                            //qDebug()<<"A Focus Val:"<< QString::number(zoomVal)<<"  ch2: "<<ch2<<" "<<ch3<<" "<<ch4<<" "<<ch5;
-                            //ZoomValToLensData(zoomVal,&hdBianBei,&hdLensVal, &mHdViewAngle_A);
                             ui->lbl_focalVal->setText(QString::number(zoomVal));  //将聚焦值显示ui界面 估计是200ms一次
                         }
                         else    //Zoom pos return 变焦位置反馈模式
                         {
-                            //qDebug()<<"zoomVal:"<< QString::number(zoomVal)<<"  ch2: "<<ch2<<" "<<ch3<<" "<<ch4<<" "<<ch5;
-                            //ZoomValToLensData(zoomVal,&hdBianBei,&hdLensVal, &mHdViewAngle_A);
-                            // qDebug()<<"zoomVal:"<< QString::number(zoomVal);
                             ZoomValToLensData_Improved(zoomVal, &hdBianBei, &hdLensVal, &mHdViewAngle_A);
                             //logZoomAndFOV(zoomVal, hdLensVal, mHdViewAngle_A, "GDA");
                             ui->lbl_lenVal->setText(QString::number(hdLensVal)+"mm");
                             ui->lblBeishu->setText("X" + QString::number(hdBianBei, 'f',1));
                             ui->lblLens->setText( QString::number(mHdViewAngle_A,'f', 1)+"°");
                             hdZoomVal = zoomVal;
-
-                            //sendAutoFocusCommand(8500, udpskt);//所有视场下对焦位置设置为8500，根据实测得到
-                            // 新增对焦位置设置
-                            // static int lastLensVal = 0;
-                            // if(hdLensVal != lastLensVal)
-                            // {
-                            //     int optimalFocusValue = getOptimalFocusValue(hdLensVal);
-                            //     sendAutoFocusCommand(optimalFocusValue, udpskt);
-                            //     lastLensVal = hdLensVal;
-                            // }
-
                         }
                         break;
                 }
@@ -2200,30 +1590,6 @@ void MainWindow::socket_Read_Data_A()
 
     mPtzDirection_A, 'f',2)+"°");
     ui->lblPitch->setText( QString::number(mPtzPitch_A, 'f',2)+"°");
-#if 0
-    //qDebug()<<"direction:"<<ptzDirection<<"    pitch:"<<ptzPitch;
-    ui->lblDirection->setText( QString::number(
-
-    mPtzDirection_A, 'f',2)+"°");
-    //706测试-伺服上报数据
-    // QString timeStr = QDateTime::currentDateTime().toString("yyyy-MM-dd hh:mm:ss.zzz");
-    // qDebug() <<"收到伺服上报方位值时间"<< timeStr
-    //          << "方位值:" << mPtzDirection_A << "°";
-    // //打开文件并写入数据（追加模式）
-    // QFile file("pid_receive.txt");
-    // if (file.open(QIODevice::WriteOnly | QIODevice::Append | QIODevice::Text)) {
-    //     QTextStream out(&file);
-    //     out << timeStr << " " <<mPtzDirection_A<< "\n";
-    //     file.close();
-    // }
-    //ui->lblPitch->setText( QString::number(ptzPitch-dd_diffy_default, 'f',2)+"°");
-    ui->lblPitch->setText( QString::number(mPtzPitch_A, 'f',2)+"°");
-
-    pnetworkComm->msgToZhiKong.gd1FangWei = (uint16_t)((mPtzDirection_A + pGyroComm->msgFromGyro.yaw - radar_diffx_A) * ANGLENET2DEG );
-    //pnetworkComm->msgToZhiKong.gd1FuYang = (uint16_t)(-(((double)pitch/(double)100.0) + GyroPitch) * ANGLENET2DEG);     //累加上惯导数据
-    pnetworkComm->msgToZhiKong.gd1FuYang = (uint16_t)((mPtzPitch_A + mGyroPitch_A) * ANGLENET2DEG);     //累加上惯导数据
-    pnetworkComm->msgToZhiKong.gd1BianBei = (uint16_t)hdLensVal;
-#endif
 }
 
 void MainWindow::socket_Read_Data_B()
@@ -2247,11 +1613,6 @@ void MainWindow::socket_Read_Data_B()
         //qDebug()<<"ptz buffer len="<<buffer.length();
         return;
     }
-    //qDebug()<<"bufLen:"<<buffer.length();
-    //printFrame(buffer);
-    //QString qstr =  buffer.toHex(' ');
-    //ui->te_Output->append(qstr);
-
     int ch0=0;
     int ch1=0;
     int ch2=0;
@@ -2313,8 +1674,6 @@ void MainWindow::socket_Read_Data_B()
                         }
                         else    //Zoom pos return
                         {
-                            //qDebug()<<"B zoomVal:"<< QString::number(zoomVal)<<"  ch2: "<<ch2<<" "<<ch3<<" "<<ch4<<" "<<ch5;
-                            //ZoomValToLensData(zoomVal,&hdBianBei_B,&hdLensVal_B, &mHdViewAngle_B);
                             ZoomValToLensData_Improved(zoomVal, &hdBianBei_B, &hdLensVal_B, &mHdViewAngle_B);
                             ui->lbl_lenVal_B->setText(QString::number(hdLensVal_B)+"mm");
                             ui->lblBeishu_B->setText("X" + QString::number(hdBianBei_B));
@@ -2342,67 +1701,14 @@ void MainWindow::socket_Read_Data_B()
         pnetworkComm->msgToZhiKong.gd2FangWei = (uint16_t)(reportDirection * ANGLENET2DEG);
         pnetworkComm->msgToZhiKong.gd2FuYang = (uint16_t)(reportPitch * ANGLENET2DEG);
 
-//        qDebug() << QString("光电B上报: 本地%1° + 惯导%2° - 补偿%3° = %4°")
-//                   .arg(mPtzDirection_B, 0, 'f', 3)
-//                   .arg(gyroDirectionDeg, 0, 'f', 3)
-//                   .arg(radar_diffx_B, 0, 'f', 3)
-//                   .arg(reportDirection, 0, 'f', 3);
     }
 
     pnetworkComm->msgToZhiKong.gd2BianBei = (uint16_t)hdLensVal_B;
 #endif
 
-#if 0
-    double gyroDirectionDeg = getGyroDirectionInDegrees();
-    double reportDirection = mPtzDirection_B + gyroDirectionDeg - radar_diffx_B;
-    double reportPitch = mPtzPitch_B + mGyroPitch_B;
-
-    while(reportDirection >= 360) reportDirection -= 360;
-    while(reportDirection < 0) reportDirection += 360;
-
-    pnetworkComm->msgToZhiKong.gd2FangWei = (uint16_t)(reportDirection * ANGLENET2DEG);
-    pnetworkComm->msgToZhiKong.gd2FuYang = (uint16_t)(reportPitch * ANGLENET2DEG);
-
-    qDebug() << QString("光电B上报: 本地%1° + 惯导%2° - 补偿%3° = %4°")
-               .arg(mPtzDirection_B, 0, 'f', 3)
-               .arg(gyroDirectionDeg, 0, 'f', 3)
-               .arg(radar_diffx_B, 0, 'f', 3)
-               .arg(reportDirection, 0, 'f', 3);
-
-    pnetworkComm->msgToZhiKong.gd2BianBei = (uint16_t)hdLensVal_B;
-#endif
     ui->lblDirection_B->setText( QString::number(mPtzDirection_B, 'f',2)+"°");
     ui->lblPitch_B->setText( QString::number(mPtzPitch_B, 'f',2)+"°");
-#if 0
-    //qDebug()<<"direction:"<<ptzDirection<<"    pitch:"<<ptzPitch;
-    ui->lblDirection_B->setText( QString::number(mPtzDirection_B, 'f',2)+"°");
-    //ui->lblPitch->setText( QString::number(ptzPitch-dd_diffy_default, 'f',2)+"°");
-    ui->lblPitch_B->setText( QString::number(mPtzPitch_B, 'f',2)+"°");
-
-    pnetworkComm->msgToZhiKong.gd2FangWei = (uint16_t)((mPtzDirection_B + pGyroComm->msgFromGyro.yaw - radar_diffx_B) * ANGLENET2DEG);
-    //pnetworkComm->msgToZhiKong.gd2FuYang = (uint16_t)(-(((double)pitch/(double)100.0) + GyroPitch) * ANGLENET2DEG);     //累加上惯导数据
-    pnetworkComm->msgToZhiKong.gd2FuYang = (uint16_t)((mPtzPitch_B + mGyroPitch_B) * ANGLENET2DEG);     //累加上惯导数据
-    pnetworkComm->msgToZhiKong.gd2BianBei = (uint16_t)hdLensVal_B;
-#endif
 }
-
-//int MainWindow::ZoomValToLensData(int in_zoomVal,float * BeiShu,float * Lens,double * hfov)
-//{
-//    int n = 0;
-//    if(in_zoomVal> 16385) in_zoomVal = 16384;
-//    for(int i=0;i<LENSDATAQNUM_SCZ2090NM;i++)
-//    {
-//        if(in_zoomVal <= SCZ2090NMlensDataQ[i].Val)
-//        {
-//            n=i;
-//            break;
-//        }
-//    }
-//    *Lens = SCZ2090NMlensDataQ[n].JiaoJu;
-//    *BeiShu = SCZ2090NMlensDataQ[n].BeiShu;
-//    *hfov = SCZ2090NMlensDataQ[n].HFov;
-//    return 0;
-//}
 
 int MainWindow::ZoomValToLensData_Improved(int in_zoomVal, int* BeiShu, int* Lens, double* hfov)
 {
@@ -2466,7 +1772,6 @@ void MainWindow::socket_Disconnected_B()
 
 void MainWindow::paintEvent(QPaintEvent *event)
 {
- //   if(connectFlag == false) return;
     try
     {
         QImage img;
@@ -2477,12 +1782,7 @@ void MainWindow::paintEvent(QPaintEvent *event)
             {
                 return;
             }
-            //将图像按比例缩放成和小窗口一样大小
-
-//            auto start = std::chrono::high_resolution_clock::now();
-
             img = mImageCh1.scaled(ui->lblPad->size(), Qt::KeepAspectRatio);
-            //QImage image = mImage.mirrored(false, true);
             fitPixmap=QPixmap::fromImage(img);
             if(fitPixmap.isNull())
             {
@@ -2505,64 +1805,9 @@ void MainWindow::paintEvent(QPaintEvent *event)
                     }
                 }
             }
-#if 0
-        if(true== ui->cbxAzimuthScale->isChecked() ) //是否画刻度线
-        {
-            int lblw;
-            int lblh;
-
-            if(currentMainSrc==1)
-            {
-                lblw=ui->lblPad->size().width()/2;
-                lblh=lblw* 0.5625;     //16:9 为：0.5625;
-
-            }
-            else
-            {
-                lblh=ui->lblPad->size().height()/2;
-                lblw=lblh * 1.33;     //4:3 为 1.33;
-
-            }
-
-            drawAzimuthScale(&fitPixmap,lblw*2,lblh*2);
-
-        }
-        else if(true== ui->cbxMarkline->isChecked() ) //是否画刻度线
-            {
-                int lblw;
-                int lblh;
-
-                if(currentMainSrc==1)
-                {
-                    lblw=ui->lblPad->size().width()/2;
-                    lblh=lblw*0.5625;
-
-                }
-                else
-                {
-                    lblh=ui->lblPad->size().height()/2;
-                    lblw=lblh*1.33;
-
-                }
-
-                drawViewAngle(&fitPixmap,lblw*2,lblh*2);
-
-            }
-#endif
-            /*if(currentMainSrc==1)
-            {
-                DrawGuideOSD(&fitPixmap,hdViewAngle);
-            }
-            else
-            {
-                DrawGuideOSD(&fitPixmap,irViewAngle);
-            }*/
             ui->lblPad->setPixmap(fitPixmap);
             mImageCh1GetNew = false;
 
-//            auto end = std::chrono::high_resolution_clock::now();
-//            std::chrono::duration<double, std::milli> elapsed = end - start;
-//            qDebug() << "osd耗时:" << elapsed.count() << "ms" ;
         }
         if(true==mImageCh2GetNew)
         {
@@ -2570,7 +1815,6 @@ void MainWindow::paintEvent(QPaintEvent *event)
             {
                 return;
             }
-            //将图像按比例缩放成和小窗口一样大小
             img = mImageCh2.scaled(ui->lblPad_B->size(), Qt::KeepAspectRatio);
             fitPixmap=QPixmap::fromImage(img);
             if(fitPixmap.isNull())
@@ -2606,8 +1850,6 @@ void MainWindow::paintEvent(QPaintEvent *event)
 bool MainWindow::eventFilter(QObject *watched, QEvent *event)
 {
     
-    //if(connectFlag == false) return false;
-
     if(watched==ui->lblPadDirection && event->type()==QEvent::Paint)//判断是否是lblImage控件，是否是绘制事件
     {
         drawAngleMeter(this->ui->lblPadDirection,mPtzDirection_A,mHdViewAngle_A,mPtzPitch_A); //绘制
@@ -2622,17 +1864,6 @@ bool MainWindow::eventFilter(QObject *watched, QEvent *event)
         drawVirtualJoyStick(mJoy_x,mJoy_y,mJoy_btn);
 
     }
-    /*if(watched==ui->lbl_padAngleGap && event->type()==QEvent::Paint)//判断是否是lblImage控件，是否是绘制事件
-    {
-        //if(operateMode == 1)
-        {
-            lblPaintAngleGap(ptzDirection,ptzPitch,dd_diffx,dd_diffy-dd_diffy_default); //绘制
-        }
-    }*/
-    /*if(watched==ui->lbl_stickEXPO && event->type()==QEvent::Paint)//判断是否是lblImage控件，是否是绘制事件
-    {
-        drawStickExpo(mExpo);
-    }*/
     return QWidget::eventFilter(watched,event);
     
 
@@ -2677,19 +1908,10 @@ void MainWindow::drawCross(QLabel * uipad, QPixmap * fitPixmap)
         lblw = lblw -tmpdif;
     }
 
-    /*int nX=(mPan_outVal)+lblw;
-    int nY=(mTilt_outVal)+lblh;
-
-    if (nX<lblw-50) nX=lblw-50;
-    if (nX>lblw+50) nX=lblw+50;
-    if (nY<lblh-50) nY=lblh-50;
-    if (nY>lblh+50) nY=lblh+50; */
-
     painter.drawLine(lblw-10,lblh ,lblw-50,lblh);
     painter.drawLine(lblw+10,lblh ,lblw+50,lblh);
     painter.drawLine(lblw,lblh-10,lblw,lblh-50);
     painter.drawLine(lblw,lblh+10,lblw,lblh+50);
-    //painter.drawRect(nX-1, nY-1,2,2);
     painter.end();
 }
 
@@ -2737,130 +1959,7 @@ void MainWindow::drawAngleMeter(QLabel * uipad,int direction,int angle, int pitc
 //640      =  2 * arcTan(10.88 /2f)
 void MainWindow::drawViewAngle(QPixmap * fitPixmap,int scrWidth,int scrHeight)
 {
-#if 0
-    int miao;
-    float n;
-    //int lens;
-    double viewAngle;
-    if(currentMainSrc == 1)
-    {
-        viewAngle = hdViewAngle;
 
-    }
-    else
-    {
-        viewAngle = irViewAngle;
-    }
-    miao = viewAngle * 60*60;
-    n= scrWidth/(float)miao*10 ;
-    //qDebug()<<"  viewAngle"<<viewAngle <<"   miao"<<miao<<"   n"<<n;
-
-    QPen pen;//画笔对象
-    QBrush brush;
-    pen.setColor(QColor(0,0,0,0));//画笔颜色
-    pen.setWidth(1);//画笔粗细
-    brush.setColor(QColor(100,100,0,70));
-    brush.setStyle(Qt::SolidPattern);
-    QPainter p;
-    p.begin(fitPixmap);
-    pen.setColor(QColor(0,255,0,150));//画笔颜色
-    p.setPen(pen);
-
-    //设置显示字体的大小
-    QFont font;
-    font.setPixelSize(12);
-    //p.setPen(pen);
-    p.setFont(font);
-
-    //p.drawText(800-28,800,"10\"" );
-
-    int oldPos=scrWidth/2;
-    int oldMiaoPos=oldPos;
-    p.drawLine(200,scrHeight-100,scrWidth-200,scrHeight-100);
-    p.drawLine(oldPos,scrHeight-100-50, oldPos,scrHeight-100);
-    for(int i=0;i<4000;i++)
-    {
-        int curPos= scrWidth/2 + i*n;
-
-        if(curPos>scrWidth-200)
-        {
-            break;
-        }
-        if(i%6==0)
-        {
-            if((curPos-oldMiaoPos) <10)
-            {
-                continue;
-            }
-            oldMiaoPos=curPos;
-            p.drawLine(curPos,scrHeight-100-3, curPos,scrHeight-100);
-            p.drawLine(scrWidth - curPos,scrHeight-100-3, scrWidth - curPos,scrHeight-100);
-
-            if(i%10==0)
-            {
-                if((curPos-oldPos) <60)
-                {
-                    continue;
-                }
-                oldPos = curPos;
-                QString ParamText = QString::number(i/6, 10);
-                p.drawText(curPos,scrHeight-100-10-5, ParamText);
-                p.drawText(scrWidth - curPos,scrHeight-100-10-5, "-"+ParamText);
-                p.drawLine(curPos,scrHeight-100-10, curPos,scrHeight-100);
-                p.drawLine(scrWidth - curPos,scrHeight-100-10, scrWidth - curPos,scrHeight-100);
-
-            }
-        }
-        else
-        {
-            //p.drawLine(curPos,797, curPos,800);
-        }
-
-    }
-
-    p.drawLine(150,200,150,scrHeight-200);
-    oldPos=scrHeight/2;
-    oldMiaoPos=oldPos;
-    p.drawLine(150,oldPos, 200,oldPos);
-    for(int i=0;i<1800;i++)
-    {
-        int curPos= scrHeight/2 + i*n;
-        if(curPos>scrHeight-200)
-        {
-            break;
-        }
-
-        if(i%6==0)
-        {
-            if((curPos-oldMiaoPos) <10)
-            {
-                continue;
-            }
-            oldMiaoPos=curPos;
-            p.drawLine(150,curPos, 150+3,curPos);
-            p.drawLine(150,scrHeight-curPos, 150+3,scrHeight-curPos);
-
-            if(i%10==0)
-            {
-                if((curPos - oldPos) <60)
-                {
-                    continue;
-                }
-                oldPos = curPos;
-                QString ParamText = QString::number(i/6, 10);
-                p.drawText(150+15,curPos, "-"+ParamText);
-                p.drawText(150+15,scrHeight-curPos, ParamText);
-                p.drawLine(150,curPos, 150+10,curPos);
-                p.drawLine(150,scrHeight-curPos, 150+10,scrHeight-curPos);
-            }
-        }
-        else
-        {
-            //p.drawLine(200,curPos, 200+3,curPos);
-        }
-
-    }
-#endif
 }
 
 #define AZMARGIN 30
@@ -2874,249 +1973,7 @@ void MainWindow::drawViewAngle(QPixmap * fitPixmap,int scrWidth,int scrHeight)
 //640      =  2 * arcTan(10.88 /2f)
 void MainWindow::drawAzimuthScale(QPixmap * fitPixmap,int scrWidth,int scrHeight)
 {
-#if 0
-    double viewAngle;
 
-    if(currentMainSrc == 1)
-    {
-        viewAngle = hdViewAngle;
-    }
-    else
-    {
-        viewAngle = irViewAngle;
-    }
-
-    QPen pen;//画笔对象
-    QBrush brush;
-    pen.setColor(QColor(0,0,0,0));//画笔颜色
-    pen.setWidth(3);//画笔粗细
-    brush.setColor(QColor(100,100,0,70));
-    brush.setStyle(Qt::SolidPattern);
-    QPainter p;
-    p.begin(fitPixmap);
-
-
-    if(ui->rb_OSDColorGreen->isChecked())
-    {
-        p.setPen(Qt::green);
-    }
-    else if(ui->rb_OSDColorRed->isChecked())
-    {
-        p.setPen(Qt::red);	//红色
-    }
-    else if(ui->rb_0SDColorBlk->isChecked())
-    {
-        p.setPen(Qt::black); //黑
-    }
-    else
-    {
-        p.setPen(Qt::white); //白
-    }
-
-    //pen.setColor(QColor(0,255,0,150));//画笔颜色
-    //p.setPen(pen);
-
-    //设置显示字体的大小
-    QFont font;
-    font.setPixelSize(24);
-    font.setBold(true);
-    //p.setPen(pen);
-    p.setFont(font);
-
-
-    int curPix= 0;
-    int curPix2= 0;
-
-    curPix=scrWidth/2;
-    QString ParamText;
-
-    //p.drawLine(curPix,AZMARGIN, curPix,AZMARGIN+50);
-
-
-    double leftStartDegPos = ptzDirection - viewAngle / scrWidth * (scrWidth - 200)/2 ;
-
-    double DotDegPerPix = viewAngle*100 / scrWidth;
-
-    //qDebug()<<"===> leftStartDegPos:"<<leftStartDegPos<<" DotDegPerPix:"<<DotDegPerPix<<" viewAngle:"<<viewAngle;
-
-    double pos = leftStartDegPos;
-    double dotOnePos = pos;
-    int lastPix = 100;
-    int cur10Pix = scrWidth / viewAngle / 10 ;  //0.1
-
-    for(int i=0; i<scrWidth-200; i++)
-    {
-        curPix = 100 + i;
-        if( curPix>scrWidth-100 )   //画到线的最右端停止
-        {
-            break;
-        }
-
-        switch((int)viewAngle)
-        {
-        case 0 ... 2:
-            //qDebug()<<"===> pos:"<<pos<<"  (int)pos:"<<(int)pos<<"  curPix:"<<curPix<<"  lastPix:"<<lastPix;
-            //double p = qRound(ptzDirection*100)/100 - int(ptzDirection);
-            pos = (double)qRound(ptzDirection);
-            dotOnePos = (double)qRound(ptzDirection);
-
-            curPix = scrWidth/2 + (dotOnePos - pos)*100*cur10Pix/10;
-            curPix2 = curPix - cur10Pix;
-            for(int j=0;j<20;j++)
-            {
-                if( curPix + j*cur10Pix > scrWidth-100 )   //画到线的最右端停止
-                {
-                    break;
-                }
-                ParamText = QString::number(pos + (dotOnePos - pos) +j*0.1 ,'f', 1);
-                p.drawText(curPix + j*cur10Pix-7,AZMARGIN-AZCHARARGIN, ParamText);
-                p.drawLine(curPix + j*cur10Pix,AZMARGIN, curPix + j*cur10Pix,AZMARGIN+3);
-
-                if( curPix2- j*cur10Pix < 100 )   //画到线的最左端停止
-                {
-                    break;
-                }
-                ParamText = QString::number(pos - (0.1 - dotOnePos + pos) -j*0.1 ,'f', 1);
-                p.drawText(curPix2 - j*cur10Pix-7,AZMARGIN-AZCHARARGIN, ParamText);
-                p.drawLine(curPix2 - j*cur10Pix,AZMARGIN, curPix2 - j*cur10Pix,AZMARGIN+3);
-                //qDebug()<<"  j:"<<j<<"  curPix2:"<<curPix2 <<"  --:"<<curPix2 - j*cur10Pix <<"  pos:" << pos - (0.1 - dotOnePos + pos) -j*0.1 <<"   (dotOnePos - pos)"<<(0.1 - dotOnePos + pos);
-            }
-            goto LINE_AZY;
-            break;
-        case 3 ... 5:
-            if((abs(pos) - abs((int)pos)) < 0.02 && curPix - lastPix >50)
-            {
-                p.drawLine(curPix,AZMARGIN, curPix,AZMARGIN+5);
-                double tempD = pos;
-                if(tempD>180) tempD = tempD-360;
-
-                ParamText = QString::number(tempD,'f', 0);
-                p.drawText(curPix-5,AZMARGIN-AZCHARARGIN, ParamText);
-
-                for(int j=1;j<10;j++)
-                {
-                    if( curPix+ j * cur10Pix > scrWidth-100 )   //画到线的最右端停止
-                    {
-                        break;
-                    }
-                    p.drawLine(curPix+ j * cur10Pix,AZMARGIN, curPix + j * cur10Pix,AZMARGIN+3);
-                    if(lastPix == 100)
-                    {
-                        if( curPix - j * cur10Pix > 100 )   //画到线的最左端停止
-                        {
-                            p.drawLine(curPix - j * cur10Pix,AZMARGIN, curPix - j * cur10Pix,AZMARGIN+3);
-                        }
-                    }
-                }
-                lastPix = curPix;
-            }
-            break;
-        case 6 ... 180:
-            //qDebug()<<"pos:"<<QString::number(pos,'f',4) <<"_ " << QString::number(pos-(int)pos,'f',1).toDouble()<<" curPix:"<<curPix<<" lastPix:"<<lastPix;
-            //if((abs(pos) - abs((int)pos)) < 0.02 && curPix - lastPix >10)
-            if(QString::number(pos-(int)pos,'f',1).toDouble() == 0.0 && curPix - lastPix >40)
-            {
-                p.drawLine(curPix,AZMARGIN, curPix,AZMARGIN+5);
-                double tempD = pos;
-                if(tempD>180) tempD = tempD-360;
-
-                ParamText = QString::number(tempD,'f', 0);
-                p.drawText(curPix-5,AZMARGIN-AZCHARARGIN, ParamText);
-                lastPix = curPix;
-            }
-            break;
-        default:
-            break;
-        }
-        pos =(double)(pos + DotDegPerPix/100);
-    }
-LINE_AZY:
-    curPix=scrHeight/2;
-    //p.drawLine(AZMARGINY,curPix, AZMARGINY + 50,curPix);
-
-
-    double upStartDegPos = ptzPitch + viewAngle / scrWidth * (scrHeight - 200)/2 ;
-    pos = upStartDegPos;
-    dotOnePos = pos;
-    lastPix = 100;
-    cur10Pix = scrWidth / viewAngle / 10 ;  //0.1
-
-    for(int i=0; i<scrHeight-200; i++)
-    {
-        curPix = 100 + i;
-        if( curPix>scrHeight-100 )   //画到线的最下端停止
-        {
-            break;
-        }
-
-        switch((int)viewAngle)
-        {
-        case 0 ... 2:
-            pos = (double)qRound(ptzPitch);
-            dotOnePos = (double)qRound(ptzPitch);
-            curPix = scrHeight/2 - (double)(dotOnePos - pos)*10*cur10Pix;
-            curPix2 = curPix - cur10Pix;
-            for(int j=0;j<20;j++)
-            {
-                if( curPix + j*cur10Pix > scrHeight-100 )   //画到Y线的最下端停止
-                {
-                    break;
-                }
-                ParamText = QString::number(pos - (dotOnePos - pos) -j*0.1 ,'f', 1);
-                p.drawText(AZMARGINY-AZCHARARGINY,curPix + j*cur10Pix+5, ParamText);
-                p.drawLine(AZMARGINY,curPix + j*cur10Pix,AZMARGINY+3, curPix + j*cur10Pix);
-
-                if( curPix2- j*cur10Pix < 100 )   //画到Y线的最上端停止
-                {
-                    break;
-                }
-                ParamText = QString::number(pos + (0.1 - dotOnePos + pos) +j*0.1 ,'f', 1);
-                p.drawText(AZMARGINY-AZCHARARGINY, curPix2 - j*cur10Pix+5,ParamText);
-                p.drawLine(AZMARGINY, curPix2 - j*cur10Pix,AZMARGINY+3,curPix2 - j*cur10Pix);
-            }
-            return;
-            break;
-       case 3 ... 5:
-            if((abs(pos) - abs((int)pos)) < 0.02 && curPix - lastPix >50)
-            {
-                p.drawLine(AZMARGINY,curPix,AZMARGINY+5, curPix);
-                ParamText = QString::number(pos,'f', 0);
-                p.drawText(AZMARGINY-AZCHARARGINY,curPix+5, ParamText);
-
-                for(int j=1;j<10;j++)
-                {
-                    if( curPix+ j * cur10Pix > scrHeight-100 )   //画到线的最下端停止
-                    {
-                        break;
-                    }
-                    p.drawLine(AZMARGINY,curPix+ j * cur10Pix,AZMARGINY+3, curPix + j * cur10Pix);
-                    if(lastPix == 100)
-                    {
-                        if( curPix - j * cur10Pix > 100 )   //画到线的最上端停止
-                        {
-                            p.drawLine(AZMARGINY,curPix - j * cur10Pix,AZMARGINY+3, curPix - j * cur10Pix);
-                        }
-                    }
-                }
-                lastPix = curPix;
-            }
-            break;
-        case 6 ... 180:
-            //if((abs(pos) - abs((int)pos)) < 0.02 && curPix - lastPix >20)
-            if(QString::number(pos-(int)pos,'f',1).toDouble() == 0.0 && curPix - lastPix >40)
-            {
-                p.drawLine(AZMARGINY,curPix,AZMARGINY+5, curPix);
-                ParamText = QString::number(pos,'f', 0);
-                p.drawText(AZMARGINY-AZCHARARGINY,curPix+5, ParamText);
-                lastPix = curPix;
-            }
-            break;
-        default:
-            break;
-        }
-        pos =(double)(pos - DotDegPerPix/100);
-    }
-#endif
 }
 void MainWindow::DrawGuideOSD(QPixmap * pixTmp, double dblCamField)
 {
@@ -3143,32 +2000,7 @@ void MainWindow::DrawGuideOSD(QPixmap * pixTmp, double dblCamField)
 
 void MainWindow::drawStickExpo(double expo)
 {
- /*   QPen pen;//画笔对象
-    QBrush brush;
-
-    pen.setWidth(1);//画笔粗细
-    brush.setColor(QColor(255,255,255,100));
-    //brush.setStyle(Qt::SolidPattern);
-    //QPainter p(this->ui->lbl_stickEXPO);
-
-    pen.setColor(QColor(0,0,0,255));//画笔颜色
-    p.setPen(pen);
-    p.drawLine(0,50,100,50);
-    p.drawLine(50,0,50,100);
-
-   // pen.setWidth(4);//画笔粗细
-    p.setPen(pen);
-    //qDebug()<<"=========================================";
-    for(int x=50;x<100;x++)
-    {
-        double a =(x-50)*0.02;
-        double b=a*pow(expo,a)*(50/expo);
-        double a2 = (x-50+1)*0.02;
-        double b2=a2*pow(expo,a2)*(50/expo);
-
-        p.drawLine(x,50-b,x+1,50-b2);
-        p.drawLine(100-x,b+50,100-x-1,b2+50);
-    } */
+ 
 }
 
 /*
@@ -3208,8 +2040,6 @@ void MainWindow::drawMouseHit(QPixmap * fitPixmap,int x_in,int y_in)
     //设置显示字体的大小
     font.setPixelSize(20);
 
-    //painter.setCompositionMode(QPainter::CompositionMode_DestinationOver);
-    //QPen pen = p.pen();
     pen.setColor( QColor(255, 255, 255,255));
     p.setPen(pen);
     p.setFont(font);
@@ -3236,14 +2066,6 @@ void MainWindow::drawROIBox(QLabel * uipad,QPixmap * fitPixmap,cv::Rect roi )
     float rate_w=0,rate_h=0;
     rate_w = (float)uipad->width() / (float)IMAGE_PIXEL_WIDTH;
     rate_h = rate_w;       //(float)ui->uipad->height() / (float)IMAGE_PIXEL_HEIGHT;
-    {
-        //rate_h = (float)uipad->height() / (float)IMAGE_PIXEL_HEIGHT_IR;
-        //rate_w = rate_h;
-        //dy = (ui->lblPad->width() - ui->lblPad->height()*1.33)/2;
-        //qDebug()<<"dy:"<<dy;
-    }
-    //qDebug()<<"rate_w:"<<rate_w<<"  rate_h:"<<rate_h;
-
     QPen pen;//画笔对象
     QBrush brush;
 
@@ -3364,45 +2186,8 @@ void MainWindow::drawVirtualJoyStick(int x,int y, int btn)
     return;
 }
 
-#if 0
-void MainWindow::lblPaintAngleGap(double d1,double p1,double d2,double p2)
-{
-    QPen pen;//画笔对象
-    QBrush brush;
-
-    pen.setWidth(1);//画笔粗细
-    brush.setColor(QColor(255,255,255,100));
-    //brush.setStyle(Qt::SolidPattern);
-    QPainter p(this->ui->lbl_padAngleGap);
-
-    pen.setColor(QColor(0,0,0,255));//画笔颜色
-    p.setPen(pen);
-    p.drawLine(10,55,96,55);
-    p.drawLine(52,5,52,105);
-
-    pen.setWidth(4);//画笔粗细
-    p.setPen(pen);
-    int gapX=int(-d2*10);
-
-    int gapY=int(p2*10);
-
-    if(gapX>40) gapX=40;
-    if(gapX<-40) gapX=-40;
-    if(gapY>40) gapY=40;
-    if(gapY<-40) gapY=-40;
-    p.drawLine(52+gapX,55+gapY,54+gapX,55+gapY);
-}
-#endif
-
 void MainWindow::updateJoyStick()
 {
-//    QUdpSocket * udpskt = getCurMainPTZ();
-//    if( udpskt == NULL)
-//    {
-//        //qDebug()<<"updateJoyStick() getcurPTZ fail";
-//        return;
-//    }
-    // 检查连接状态
     if(connectFlag_A == false && connectFlag_B == false) {
         return;
     }
@@ -3433,8 +2218,6 @@ void MainWindow::updateJoyStick()
         axial = hid->axialVal;
         btn=hid->btnVal2;
     hidLock.unlock();
-
-    //qDebug()<<"pan:"<<pan<<"  tilt:"<<tilt;
 
     if(pan_old != pan || tilt_old != tilt)   //方向 俯仰
     {
@@ -3476,38 +2259,9 @@ void MainWindow::updateJoyStick()
         {
             udpSocket_B->write((char *)cmd,7);
         }
-//        if(ui->rb_selGDA->isChecked())
-//        {
-//            udpSocket_A->write((char *)cmd,7);
-//        }
-//        else
-//        {
-//            udpSocket_B->write((char *)cmd,7);
-//        }
-
         pan_old=pan;
         tilt_old=tilt;
 
-        /* if(ui->rb_flipPicOn->isChecked())
-        {
-            uint8_t * cmd = mPodCmd.crtSteplessCmd(pan_outVal* ANGLENET2DEG, tilt_outVal* ANGLENET2DEG);
-            udpskt->write((char *)cmd,7);
-        }
-        else    //倒装吊舱 */
-//        {
-//            //uint8_t * cmd = mPodCmd.crtSteplessCmd((pan_outVal* ANGLENET2DEG), -(tilt_outVal* ANGLENET2DEG));
-//            /*if(pan_outVal>32768) pan_outVal = 32768;
-//            else if(pan_outVal<-32768) pan_outVal = -32768;
-
-//            if(tilt_outVal>32768) tilt_outVal = 32768;
-//            else if(tilt_outVal<-32768) tilt_outVal = -32768; */
-//            //qDebug()<<"pan_outVal:"<<pan_outVal<<"  tilt:"<<-tilt_outVal;
-//            uint8_t * cmd = mPodCmd.crtSteplessCmd((pan_outVal ), -(tilt_outVal));
-//            udpskt->write((char *)cmd,7);
-//        }
-
-//        pan_old=pan;
-//        tilt_old=tilt;
     }
     if(axial_old != axial)
     {
@@ -3552,7 +2306,6 @@ void MainWindow::updateJoyStick()
         }
         else
             on_pbZoomIn_released();
-        //ui->te_Output->append(QString::number(axial));
         axial_old = axial;
     }
 }
@@ -3568,12 +2321,6 @@ void MainWindow::updateVirtualJoyStick(int x,int y)
 
     QUdpSocket * udpskt = getCurMainPTZ();
     if( udpskt == NULL) return;
-/*
-    QDateTime current_date_time =QDateTime::currentDateTime();
-    int diff = pre_date_time.msecsTo(current_date_time);
-    pre_date_time = current_date_time;
-    qDebug()<<" diff:"<<diff;
-    if(diff< 30) return; */
 
     pan = (x-80)*2 + 512;
     tilt = (y-80)*2 + 512;
@@ -3627,9 +2374,6 @@ int MainWindow::updateJoysticktoExpo(int inVal,double expo,int maxVal,int tho)
 
 void MainWindow::slotGetOneFrameCh1(QImage img)
 {
-
-    //QUdpSocket * udpskt = getCurMainPTZ();
-    // 检查连接状态
     if( connectFlag_A == false)
     {
         qDebug()<<"slotGetOneFrameCh1 udpskt is null" <<"   connectFlag_A:"<<connectFlag_A <<"   connectFlag_B:"<<connectFlag_B;
@@ -3663,7 +2407,6 @@ void MainWindow::slotGetOneFrameCh1(QImage img)
 
 void MainWindow::slotGetOneFrameCh2(QImage img)
 {
-    //QUdpSocket * udpskt = getCurMainPTZ();
     if( connectFlag_B == false)
     {
         qDebug()<<"slotGetOneFrameCh2 udpskt is null" <<"   connectFlag_A:"<<connectFlag_A <<"   connectFlag_B:"<<connectFlag_B;
@@ -3804,9 +2547,7 @@ void MainWindow::on_pbStop_pressed()
 {
     QUdpSocket * udpskt = getCurMainPTZ();
     if( udpskt == NULL) return;
-    //sendSetCmd(PKT_TYPE_PTZSTOP,0);
     ptzCmdStop[6]=0xff & ( ptzCmdStop[1]+ ptzCmdStop[2]+ ptzCmdStop[3]+ ptzCmdStop[4]+ ptzCmdStop[5]);
-    // udpskt->write((char *)ptzCmdStop,sizeof(ptzCmdStop))
     if(connectFlag_A != false)
     {
         udpSocket_A->write((char *)ptzCmdStop,sizeof(ptzCmdStop));
@@ -3819,19 +2560,7 @@ void MainWindow::on_pbStop_pressed()
 
 void MainWindow::on_pbPicInPicOnOff_clicked()
 {
-/*    if(picInPicOn == true)
-    {
-        ui->pbPicInPicOnOff->setText("打开画中画");
-        picInPicOn = false;
-    }
-    else
-    {
-        ui->pbPicInPicOnOff->setText("关闭画中画");
-        picInPicOn = true;
-    }
-    sendSetCmd(PKT_TYPE_PICINPIC,(int)picInPicOn);
-    //qDebug()<<("picInPicOn=")<<(int)picInPicOn;
-*/
+
 }
 
 void MainWindow::on_pbUp_released()
@@ -3840,7 +2569,6 @@ void MainWindow::on_pbUp_released()
     if( udpskt == NULL) return;
 
     ptzCmdStop[6]=0xff & ( ptzCmdStop[1]+ ptzCmdStop[2]+ ptzCmdStop[3]+ ptzCmdStop[4]+ ptzCmdStop[5]);
-    // udpskt->write((char *)ptzCmdStop,sizeof(ptzCmdStop));
     if(connectFlag_A != false)
     {
         udpSocket_A->write((char *)ptzCmdStop,sizeof(ptzCmdStop));
@@ -3857,7 +2585,6 @@ void MainWindow::on_pbDown_released()
     if( udpskt == NULL) return;
 
     ptzCmdStop[6]=0xff & ( ptzCmdStop[1]+ ptzCmdStop[2]+ ptzCmdStop[3]+ ptzCmdStop[4]+ ptzCmdStop[5]);
-    // udpskt->write((char *)ptzCmdStop,sizeof(ptzCmdStop));
     if(connectFlag_A != false)
     {
         udpSocket_A->write((char *)ptzCmdStop,sizeof(ptzCmdStop));
@@ -3874,7 +2601,6 @@ void MainWindow::on_pbLeft_released()
     if( udpskt == NULL) return;
 
     ptzCmdStop[6]=0xff & ( ptzCmdStop[1]+ ptzCmdStop[2]+ ptzCmdStop[3]+ ptzCmdStop[4]+ ptzCmdStop[5]);
-    // udpskt->write((char *)ptzCmdStop,sizeof(ptzCmdStop));
     if(connectFlag_A != false)
     {
         udpSocket_A->write((char *)ptzCmdStop,sizeof(ptzCmdStop));
@@ -3883,7 +2609,6 @@ void MainWindow::on_pbLeft_released()
     {
         udpSocket_B->write((char *)ptzCmdStop,sizeof(ptzCmdStop));
     }
-    //qDebug()<<"on_pbLeft_released";
 }
 
 void MainWindow::on_pbRight_released()
@@ -3892,8 +2617,6 @@ void MainWindow::on_pbRight_released()
     if( udpskt == NULL) return;
 
     ptzCmdStop[6]=0xff & ( ptzCmdStop[1]+ ptzCmdStop[2]+ ptzCmdStop[3]+ ptzCmdStop[4]+ ptzCmdStop[5]);
-    // udpskt->write((char *)ptzCmdStop,sizeof(ptzCmdStop));
-    // 同时发送给A和B两个光电
     if(connectFlag_A != false)
     {
         udpSocket_A->write((char *)ptzCmdStop,sizeof(ptzCmdStop));
@@ -3902,7 +2625,6 @@ void MainWindow::on_pbRight_released()
     {
         udpSocket_B->write((char *)ptzCmdStop,sizeof(ptzCmdStop));
     }
-    //qDebug()<<"on_pbRight_released";
 }
 
 void MainWindow::on_pbUp_pressed()
@@ -3918,8 +2640,6 @@ void MainWindow::on_pbUp_pressed()
     else
     {
         uint8_t * cmd = mPodCmd.crtSteplessCmd(0,(pelco_spd_val* ANGLENET2DEG));
-//        udpskt->write((char *)cmd,7);
-        // 同时发送给A和B两个光电
         if(connectFlag_A != false)
         {
             udpSocket_A->write((char *)cmd,7);
@@ -3928,8 +2648,6 @@ void MainWindow::on_pbUp_pressed()
         {
             udpSocket_B->write((char *)cmd,7);
         }
-        //qDebug()<<"-(pelco_spd_val* ANGLENET2DEG):"<<-(pelco_spd_val* ANGLENET2DEG) << "-pelco_spd_val* ANGLENET2DEG"<<-pelco_spd_val* ANGLENET2DEG;
-        //qDebug()<<"-(pelco_spd_val*91):"<<-(pelco_spd_val*93) << "-pelco_spd_val*91"<<-pelco_spd_val*93;
     }
 
 }
@@ -3947,8 +2665,6 @@ void MainWindow::on_pbDown_pressed()
     else
     {
         uint8_t * cmd = mPodCmd.crtSteplessCmd(0,-(pelco_spd_val* ANGLENET2DEG));
-//        udpskt->write((char *)cmd,7);
-        // 同时发送给A和B两个光电
         if(connectFlag_A != false)
         {
             udpSocket_A->write((char *)cmd,7);
@@ -3973,9 +2689,6 @@ void MainWindow::on_pbLeft_pressed()
     else
     {
         uint8_t * cmd = mPodCmd.crtSteplessCmd(-(pelco_spd_val* ANGLENET2DEG),0);
-//         udpskt->write((char *)cmd,7);
-
-        // 同时发送给A和B两个光电
         if(connectFlag_A != false)
         {
             udpSocket_A->write((char *)cmd,7);
@@ -3985,14 +2698,6 @@ void MainWindow::on_pbLeft_pressed()
             udpSocket_B->write((char *)cmd,7);
         }
     }
-
-
-
-    /*QByteArray mBuf;
-    mBuf.resize(7);
-    memcpy(mBuf.data(),cmd, 7);
-    qDebug()<<"left:"<<mBuf.toHex(' ');
-    */
 }
 
 void MainWindow::on_pbRight_pressed()
@@ -4009,8 +2714,6 @@ void MainWindow::on_pbRight_pressed()
     else
     {
         uint8_t * cmd = mPodCmd.crtSteplessCmd(pelco_spd_val* ANGLENET2DEG,0);
-//         udpskt->write((char *)cmd,7);
-        // 同时发送给A和B两个光电
         if(connectFlag_A != false)
         {
             udpSocket_A->write((char *)cmd,7);
@@ -4020,24 +2723,8 @@ void MainWindow::on_pbRight_pressed()
             udpSocket_B->write((char *)cmd,7);
         }
     }
-    /*QByteArray mBuf;
-    mBuf.resize(7);
-    memcpy(mBuf.data(),cmd, 7);
-    qDebug()<<"right:"<<mBuf.toHex(' ');*/
 }
 
-
-#if 0
-void MainWindow::on_pbScan_clicked()
-{
-    sendSetCmd(PKT_TYPE_SCAN,0);
-    scanflag=!scanflag;
-    if(scanflag)
-        sendSetCmd(PKT_TYPE_SCAN,1);   //开始扫描
-    else
-        sendSetCmd(PKT_TYPE_SCAN,2);   //停止扫描
-}
-#endif
 void MainWindow::on_pbSetZero_clicked()
 {
     sendSetCmd(PKT_TYPE_TOZERO,0);
@@ -4066,36 +2753,10 @@ void MainWindow::stick_timeOut()
 
 void MainWindow::Theo_timeOut()
 {
-    //if(connectFlag_A == false || connectFlag_B == false)
     if(connectRtspFlag_A == false || connectRtspFlag_B == false)
         return;
 
-    //*********************************************************************************仅作测试用
-
     CurTime = QTime::currentTime(); //仅作测试用  系统的当前时间 相对0：0：0.000 的ms数
-    /*ui->lbl_BjTime->setText(QString("%1").arg(CurTime.hour(),2,10,QLatin1Char('0'))+":"+ \
-                            QString("%1").arg(CurTime.minute(),2,10,QLatin1Char('0'))+":"+ \
-                            QString("%1").arg(CurTime.second(),2,10,QLatin1Char('0'))+"."+ \
-                            QString("%1").arg(CurTime.msec(),3,10,QLatin1Char('0'))); */
-    //*********************************************************************************仅作测试用
-#if 0
-    SRC_DATA input;
-    RET_DATA output;
-
-    //input.T0 = QTime(0,0,0);//中心会下发，按实际赋值
-    input.time = CurTime;   //取本机系统时间
-    input.T0_Valid = false;//中心停止发送T0后，置为fasle  正在发送置为true  中心会连续发送10s
-    input.iCurMcLeadMode = 0;//默认填0
-    output.bT0_Valid = false;
-    output.A = 0;
-    output.E = 0;
-    mAETheo.dblA= output.A;
-    mAETheo.dblE= output.E;
-
-    fullscreen.OsdTime =CurTime;
-    fullscreen.OsdA =mPtzDirection_A;
-    fullscreen.OsdE =mPtzPitch_A-dd_diffy;
-#endif
     mPlayer->OsdTime =CurTime;
     mPlayer->OsdA =mPtzDirection_A;
     mPlayer->OsdE =mPtzPitch_A;
@@ -4111,15 +2772,8 @@ void MainWindow::Theo_timeOut()
     mPlayerSub->OsdLens = hdLensVal_B;
     mPlayerSub->OsdViewAngle = mHdViewAngle_B;
     mPlayerSub->OsdUpdate =true;
-
-
-    //fullscreen.RelativeTime = 0;
     mPlayer->RelativeTime = 0;
     mPlayerSub->RelativeTime = 0;
-    //calcAngleSpeed();   //计算角速度并显示
-    //chkCrossBorder();
-
-
 
     if(0 == mFoc_or_zoom_flag ) //zoom
     {
@@ -4135,13 +2789,10 @@ void MainWindow::Theo_timeOut()
 
         static int postHdZoomVal_B;
         static int postHdZoomVal_A;
-        //qDebug()<<"hdZoomVal_B:"<<hdZoomVal_B <<" postHdZoomVal_B:"<<postHdZoomVal_B ;
-
         if(hdZoomVal != postHdZoomVal_A )
         {
             if(ui->cbxUseDefFocA->isChecked())
             {
-                //adjFocusPosByDist(udpSocket_A,pnetworkComm->msgFromZhiKong.zkDistence);
                 adjFocusPosByDist(udpSocket_A,pnetworkComm->msgFromZhiKong.zkDistence);
                 postHdZoomVal_A = hdZoomVal;
             }
@@ -4151,25 +2802,12 @@ void MainWindow::Theo_timeOut()
         {
             if(ui->cbxUseDefFocB->isChecked())
             {
-                //adjFocusPosByDist(udpSocket_A,pnetworkComm->msgFromZhiKong.zkDistence);
                 adjFocusPosByDist(udpSocket_B,pnetworkComm->msgFromZhiKong.zkDistence);
                 postHdZoomVal_B = hdZoomVal_B;
             }
         }
 
     }
-
-
-//    // 惯导数据监控
-//    static int gyroDebugCounter = 0;
-//    gyroDebugCounter++;
-
-//    // 每5秒输出一次惯导调试信息
-//    if (gyroDebugCounter % 50 == 0) {  // 100ms * 50 = 5秒
-//        debugGyroAngles();
-//    }
-
-
     return;
 }
 
@@ -4184,10 +2822,6 @@ int MainWindow::adjFocusPosByDist(QUdpSocket * udpSocket,int dist)
     }
 
     if(t < 1  ) t = 1000;
-    //if(postdist == t ) return 100;
-    //84 01 04 48 0p 0q 0r 0s FF 设置聚焦位置pgrs: 0x1000 ~ 0x8000
-
-
     int focval = ui->leHdaDefFoc->text().toInt();   //4400;//getFocValByDist(t);   //配置中相机A对焦值
 
     hdCmdFocalTo[4] = (focval>>12)&0xf;
@@ -4196,66 +2830,18 @@ int MainWindow::adjFocusPosByDist(QUdpSocket * udpSocket,int dist)
     hdCmdFocalTo[7] = (focval>>0)&0xf;
     qDebug()<<"adjFocusPosByDist" <<focval;
     udpSocket->write((char *)hdCmdFocalTo ,sizeof(hdCmdFocalTo));
-    // QByteArray cmdData((const char *)hdCmdFocalTo, sizeof(hdCmdFocalTo));
-    // qDebug() << "=============UDP Focal Command:" << cmdData.toHex(' ');  // 打印这里发送的数据
     postdist = t;
 }
 
 void MainWindow::calcAngleSpeed()
 {
-#if 0
-    static QTime preTime;
-    CurTime = QTime::currentTime();
-    int timeDiff = CurTime.msec() - preTime.msec();
-    if(timeDiff < 0)  timeDiff = timeDiff + 1000;
-    preTime = CurTime;
 
-    static int calcCnt = 0;
-    static double oldPtzDir = 0;
-    static double oldPtzPitch = 0;
-    static double angle_diff_x;
-    static double angle_diff_y;
-    double angle_speed_x;
-    double angle_speed_y;
-    static int timeDiffSeg;
-
-    if(calcCnt >4)
-    {
-        angle_speed_x = angle_diff_x * 1000/timeDiffSeg;       //20=1000/50    定时器50ms，以每秒计算角速度
-        angle_speed_y = angle_diff_y * 1000/timeDiffSeg;
-        if(angle_speed_x > 100) angle_speed_x = 63;
-        if(angle_speed_x > 100) angle_speed_y = 65;
-        //ui->lblAngleSpeedX->setText( QString::number(angle_speed_x,'f', 1)+"°");
-        //ui->lblAngleSpeedY->setText( QString::number(angle_speed_y,'f', 1)+"°");
-        //qDebug()<<"time diff:"<<timeDiff<<"   angle_speedx:"<<angle_speed_x <<"    angle_speedy:"<<angle_speed_y;
-
-        calcCnt = 0;
-        timeDiffSeg = 0;
-        angle_diff_x = 0;
-        angle_diff_y = 0;
-    }
-    else
-    {
-        angle_diff_x = angle_diff_x + abs(ptzDirection - oldPtzDir);
-        angle_diff_y = angle_diff_y + abs(ptzPitch - oldPtzPitch);
-        timeDiffSeg = timeDiffSeg + timeDiff;
-    }
-    calcCnt++;
-    oldPtzDir = ptzDirection;
-    oldPtzPitch = ptzPitch;
-#endif
 }
 
 void MainWindow::on_cbxPresetNoEdit_currentIndexChanged(int index)
 {
     presetCurrentIdx = index+1;
-    //qDebug()<<("presetCurrentIdx=")<<(int)presetCurrentIdx;
 }
-/*
-void MainWindow::on_pbAutoFocus_clicked()
-{
-    sendSetCmd(PKT_TYPE_AUTOFOCUS,0);
-}*/
 
 void MainWindow::on_pbAutoFoc_clicked()
 {
@@ -4320,10 +2906,6 @@ void MainWindow::on_pbZoomIn_released()
 
 void MainWindow::on_pbFocusF_released()
 {
-    // QUdpSocket * udpskt = getCurMainPTZ();
-    // if( udpskt == NULL) return;
-    // udpskt->write((char *)hdCmdFocalStop,sizeof(hdCmdFocalStop));
-    //修改光电AB同步对焦
     if(connectFlag_A != false)
     {
         udpSocket_A->write((char *)hdCmdFocalStop ,sizeof(hdCmdFocalStop));
@@ -4336,10 +2918,6 @@ void MainWindow::on_pbFocusF_released()
 
 void MainWindow::on_pbFocusN_released()
 {
-    // QUdpSocket * udpskt = getCurMainPTZ();
-    // if( udpskt == NULL) return;
-    // udpskt->write((char *)hdCmdFocalStop,sizeof(hdCmdFocalStop));
-    //修改光电AB同步对焦
     if(connectFlag_A != false)
     {
         udpSocket_A->write((char *)hdCmdFocalStop ,sizeof(hdCmdFocalStop));
@@ -4352,10 +2930,6 @@ void MainWindow::on_pbFocusN_released()
 
 void MainWindow::on_pbFocusF_pressed()
 {
-    // QUdpSocket * udpskt = getCurMainPTZ();
-    // if( udpskt == NULL) return;
-    // udpskt->write((char *)hdCmdFocalFar,sizeof(hdCmdFocalFar));
-    //修改光电AB同步对焦
     if(connectFlag_A != false)
     {
         udpSocket_A->write((char *)hdCmdFocalFar ,sizeof(hdCmdFocalFar));
@@ -4368,10 +2942,6 @@ void MainWindow::on_pbFocusF_pressed()
 
 void MainWindow::on_pbFocusN_pressed()
 {
-    // QUdpSocket * udpskt = getCurMainPTZ();
-    // if( udpskt == NULL) return;
-    // udpskt->write((char *)hdCmdFocalNear,sizeof(hdCmdFocalNear));
-    //修改光电AB同步对焦
     if(connectFlag_A != false)
     {
         udpSocket_A->write((char *)hdCmdFocalNear ,sizeof(hdCmdFocalNear));
@@ -4395,13 +2965,6 @@ void MainWindow::on_pbSetInitZero_clicked()
     }
 }
 
-/*
-void MainWindow::on_pbResetMotor_clicked()
-{
-    sendSetCmd(PKT_TYPE_RESETMOTOR,0);
-}
-*/
-
 void MainWindow::on_pbRec_clicked()
 {
     QString filePath1,path1;
@@ -4424,27 +2987,6 @@ void MainWindow::on_pbRec_clicked()
         mPlayerSub->recflag  = false;
         ui->pbRec->setText("开始录像");
         QThread::msleep(300);
-/*
-        filePath1 = ui->leRecFileDir->text() + "/" + "ch1.srt";
-        path1 = ui->leRecFileDir->text() + "/"+ current_date+"ch1.srt";
-        QFile::rename(filePath1,path1);
-
-        filePath1 = ui->leRecFileDir->text() + "/" + "ch1.h264";
-        path1 = ui->leRecFileDir->text() + "/"+ current_date+"ch1.h264";
-        QFile::rename(filePath1,path1);
-
-
-
-		filePath2 = ui->leRecFileDir->text() + "/" + "ch2.srt";
-        path2 = ui->leRecFileDir->text() + "/"+ current_date+"ch2.srt";
-        QFile::rename(filePath2,path2);
-		
-        filePath2 = ui->leRecFileDir->text() + "/" + "ch2.h264";
-        path2 = ui->leRecFileDir->text() + "/"+ current_date+"ch2.h264";
-        //qDebug()<<tr(" ")<<filePath2<<" _ "<<path2;
-        QFile::rename(filePath2,path2);
-*/
-        //QMessageBox::about(NULL, "提示", "录像已保存\n" + path1);
         QString msg="录像已保存至 "+ mPlayer->recDir;
         dlg.initFrame(msg);
         dlg.setAttribute(Qt::WA_ShowModal, true);
@@ -4470,17 +3012,6 @@ void MainWindow::on_pbConfigSave_clicked()
         QMessageBox::about(NULL, "提示", "输入的IP地址无效");
         return;
     }
-    /*if(checkip(ui->leSetIPMask->text()) == false)
-    {
-        QMessageBox::about(NULL, "提示", "输入的IP掩码无效");
-        return;
-    }
-    if(checkip(ui->leSetIPGageway->text()) == false)
-    {
-        QMessageBox::about(NULL, "提示", "输入的网关地址无效");
-        return;
-    }*/
-
     if(checkip(ui->leSetHdCamIP->text()) == false)
     {
         QMessageBox::about(NULL, "提示", "输入的相机地址无效");
@@ -4501,32 +3032,12 @@ void MainWindow::on_pbConfigSave_clicked()
         QMessageBox::about(NULL, "提示", "转台IP地址重新上电后将设置为新的IP地址\n" + ui->leSetIP->text().toLatin1());
         QThread::msleep(300);
     }
-    /*if(leSetIPMaskChanged == true)
-    {
-        cfgIpAddr = IPV4StringToInteger(ui->leSetIPMask->text());
-        sendSetIP(PKT_TYPE_SETIPMASK);
-        QMessageBox::about(NULL, "提示", "转台IP地址重新上电后将设置为新的IP掩码地址\n" + ui->leSetIPMask->text().toLatin1());
-        QThread::msleep(300);
-    }
-    if(leSetIPGWChanged == true)
-    {
-        cfgIpAddr = IPV4StringToInteger(ui->leSetIPGageway->text());
-        sendSetIP(PKT_TYPE_SETIPGW);
-        QMessageBox::about(NULL, "提示", "转台IP地址重新上电后将设置为新的网关地址\n" + ui->leSetIPGageway->text().toLatin1());
-    }
-    if(leSetHdCamIpChanged == true)
-    {
-        strncpy(hdCamIp,ui->leSetHdCamIP->text().toLatin1(),16);
-        QMessageBox::about(NULL, "提示", "RTSP相机IP地址已修改\n" + ui->leSetHdCamIP->text().toLatin1());
-    }*/
     writeCfgFile();
     ui->cbxEditLock_sys->setCheckState(Qt::Unchecked);
 }
 
 void MainWindow::setCtlObjStatus(bool enFlag)
 {
-   // ui->rbSmallTracking->setEnabled(enFlag);
-   // ui->rbDetection->setEnabled(enFlag);
     ui->tabWidConfig->setEnabled(enFlag);
     ui->pbOsdWordSave->setEnabled(enFlag);
     ui->cbxEditLock_sys->setEnabled(enFlag);
@@ -4545,28 +3056,14 @@ void MainWindow::setCtlObjStatus(bool enFlag)
     ui->pbApUp->setEnabled(enFlag);
     ui->pbApDown->setEnabled(enFlag);
     ui->pbToZero->setEnabled(enFlag);
-
-//    ui->cbxBalance->setEnabled(enFlag);
     ui->lblPadDirection->setEnabled(enFlag);
     ui->lblPadDirection_B->setEnabled(enFlag);
-    //ui->gridLayout_Theo->setEnabled(enFlag);
     ui->rb_trackStick->setEnabled(enFlag);
-    //ui->rb_trackTable->setEnabled(enFlag);
     ui->rb_Center->setEnabled(enFlag);
-    //ui->rb_toZero->setEnabled(enFlag);
     ui->rb_Tracking->setEnabled(enFlag);
-
-
     ui->rb_trackRoi10->setEnabled(enFlag);
     ui->rb_trackRoi20->setEnabled(enFlag);
     ui->rb_trackRoi40->setEnabled(enFlag);
-    /*ui->rb_StickSpeedH->setEnabled(enFlag);
-    ui->rb_StickSpeedM->setEnabled(enFlag);
-    ui->rb_StickSpeedL->setEnabled(enFlag);
-    ui->checkBoxCaught->setEnabled(enFlag);
-    ui->checkBoxTheoGuid->setEnabled(enFlag);
-    ui->checkBoxCenterGuid->setEnabled(enFlag);
-    ui->pbSyncSystime->setEnabled(enFlag);*/
     ui->pb_OpenSelfTest->setEnabled(enFlag);
     ui->pb_CloseSelfTest->setEnabled(enFlag);
     ui->cbxStartTracking->setEnabled(enFlag);
@@ -4579,8 +3076,6 @@ void MainWindow::on_cbxEditLock_sys_stateChanged(int arg1)
     {
         ui->leRecFileDir->setEnabled(true);
         ui->leSetIP->setEnabled(true);
-        //ui->leSetIPMask->setEnabled(true);
-        //ui->leSetIPGageway->setEnabled(true);
         leRecDirChanged = false;
         leSetIpChanged = false;
         leSetIPMaskChanged = false;
@@ -4597,8 +3092,6 @@ void MainWindow::on_cbxEditLock_sys_stateChanged(int arg1)
     {
         ui->leRecFileDir->setEnabled(false);
         ui->leSetIP->setEnabled(false);
-        //ui->leSetIPMask->setEnabled(false);
-        //ui->leSetIPGageway->setEnabled(false);
         ui->pbConfigSave->setEnabled(false);
         ui->leSetHdCamIP->setEnabled(false);
         ui->leSetHdCamPort->setEnabled(false);
@@ -4673,99 +3166,6 @@ int MainWindow::readCfgFile()
     if (!fileinfo.isFile()) {
         QMessageBox::about(NULL, "提示", "ptzcfgfile.ini文件不存在，程序无法运行");
         return 0;
-        /*qDebug() << "ptzcfgfile.ini文件不存在,创建默认配置文件";
-        //创建配置文件，写入默认值
-        QSettings setting(endPath, QSettings::IniFormat);
-        setting.beginGroup("NETWORK");
-        setting.setValue("PtzIp", "192.168.1.202");         // 云台A的IP地址
-        setting.setValue("SetHdCamIP", "192.168.1.108");    // 高清相机A的IP
-        setting.setValue("SetHdCamPort", 8555);             // 相机A端口
-        setting.setValue("PtzIp_B", "192.168.1.203");       // 云台B的IP地址
-        setting.setValue("SetHdCamIP_B", "192.168.1.109");  // 高清相机B的IP
-        setting.setValue("SetHdCamPort_B", 8555);           // 相机B端口
-        setting.setValue("DeviceID", 10);                   // 设备ID
-        setting.setValue("CenterCom", "COM6");              // 中心通信串口
-        setting.setValue("ZhiKongIP", "192.168.1.10");      // 指控系统IP
-        setting.setValue("ZhiKongPort", 10050);             // 指控系统端口
-        setting.setValue("GyroIP", "192.168.1.30");         // 陀螺仪IP
-        setting.setValue("GyroPort", 10070);                // 陀螺仪端口
-        setting.setValue("ListenGyroPort", 10080);          // 监听陀螺仪端口
-        setting.setValue("MyIP", "192.168.1.20");           // 本机IP
-        setting.setValue("MyPort", 10060);                  // 本机端口
-        setting.endGroup();
-
-        setting.beginGroup("STATIONINFO");
-        setting.setValue("StationName", "10号站");          // 站点名称
-        setting.setValue("StationGdcType", "WGS84");       // 坐标系类型
-        setting.setValue("StationB", "119.7907");          // 站址纬度(度)
-        setting.setValue("StationL", "35.3571");           // 站址经度(度)
-        setting.setValue("StationH", "60");                // 站址高程(米)
-        setting.endGroup();
-
-        setting.beginGroup("PARAM");
-        setting.setValue("RecordDir", "d:");              // 录像保存目录
-        setting.setValue("Diff_X_A", 0);                  // 光电A方位补偿
-        setting.setValue("Diff_X_B", 0);                  // 光电B方位补偿
-        setting.setValue("Diff_Y_A", 0);                  // 光电A俯仰补偿
-        setting.setValue("Diff_Y_B", 0);                  // 光电B俯仰补偿
-        setting.setValue("CentroidWhMax", 245);           // 质心算法白色最大值
-        setting.setValue("CentroidBlkMin", 80);           // 质心算法黑色最小值
-        setting.endGroup();
-#if 0
-        setting.beginGroup("OSD");
-        setting.setValue("OSDDeviceName", "10号站点");
-        setting.setValue("OSDFont", "黑体");
-        setting.setValue("OSDFontSize", 32);
-        setting.setValue("OSDLocationY", 950);
-        setting.endGroup();
-#endif
-
-        setting.beginGroup("MOUNTPOS");
-        setting.setValue("GD1MOUNTX", 1.34);           // 光电1安装X坐标(米)
-        setting.setValue("GD1MOUNTY", 0.73);           // 光电1安装Y坐标(米)
-        setting.setValue("GD1MOUNTZ", -0.17);          // 光电1安装Z坐标(米)
-        setting.setValue("GD2MOUNTX", -3.21);          // 光电2安装X坐标(米)
-        setting.setValue("GD2MOUNTY", -0.73);          // 光电2安装Y坐标(米)
-        setting.setValue("GD2MOUNTZ", -0.17);          // 光电2安装Z坐标(米)
-        setting.setValue("CROSSBORDERBEG",315.0);      // 越界开始角度
-        setting.setValue("CROSSBORDEREND",45.0);       // 越界结束角度
-        setting.endGroup();
-
-        setting.beginGroup("PID");
-        setting.setValue("Pid_X_Scale", 3);            // X轴PID缩放系数
-        setting.setValue("Pid_X_P", 1);                // X轴比例系数
-        setting.setValue("Pid_X_I", 0.5);              // X轴积分系数
-        setting.setValue("Pid_X_D", 1);                // X轴微分系数
-        setting.setValue("Pid_Y_Scale", 3);            // Y轴PID缩放系数
-        setting.setValue("Pid_Y_P", 0.6);              // Y轴比例系数
-        setting.setValue("Pid_Y_I", 0.5);              // Y轴积分系数
-        setting.setValue("Pid_Y_D", 1);                // Y轴微分系数
-        setting.setValue("Pid_MaxOut", 255);           // PID最大输出
-        setting.setValue("Pid_MinOut", 1);             // PID最小输出
-        setting.setValue("Ptz_DefSpeed", 10);          // 云台默认速度
-        setting.endGroup();
-
-        //dd_diffx =0;
-        dd_diffx_default_A=0;
-        dd_diffx_default_B=0;
-        dd_diffy_default_A=0;
-        dd_diffy_default_B=0;
-        mcDevID=10;
-        mPid_X_Scale = 3;
-        mPid_X_P = 1;
-        mPid_X_I = 0.5;
-        mPid_X_D = 1;
-        mPid_Y_Scale = 3;
-        mPid_Y_P = 0.6;
-        mPid_Y_I = 0.5;
-        mPid_Y_D = 1;
-        strcpy(mServoCom,"COM6");
-        strcpy(mZhiKongIp,"192.168.1.10");
-        mZhiKongPort = 10050;
-        strcpy(mMyIp,"192.168.1.20");
-        mMyPort = 10060;*/
-
-        //return -1;
     }
 
     QSettings readSetting(endPath, QSettings::IniFormat);
@@ -4842,9 +3242,6 @@ int MainWindow::readCfgFile()
     radar_diffx_B = readSetting.value("RadarDiff_X_B").toDouble();
     radar_diffy_A = readSetting.value("RadarDiff_Y_A").toDouble();
     radar_diffy_B = readSetting.value("RadarDiff_Y_B").toDouble();
-
-    //trackerThd->mCentroidWhMax = readSetting.value("CentroidWhMax").toInt();
-    //trackerThd->mCentroidBlkMin = readSetting.value("CentroidBlkMin").toInt();
     readSetting.endGroup();
 
     ui->leRecFileDir->setText(sRecordDir);
@@ -4857,24 +3254,6 @@ int MainWindow::readCfgFile()
     ui->leSetRadarDiffX_B->setText(QString::number(radar_diffx_B,'f',4));
     ui->leSetRadarDiffY_A->setText(QString::number(radar_diffy_A,'f',4));
     ui->leSetRadarDiffY_B->setText(QString::number(radar_diffy_B,'f',4));
-/*
-    readSetting.beginGroup("OSD");
-    QString sOSDDeviceName = readSetting.value("OSDDeviceName").toString();
-    QString sOSDFont = readSetting.value("OSDFont").toString();
-    int iFontSize = readSetting.value("OSDFontSize").toInt();
-    int iOSDLocationY = readSetting.value("OSDLocationY").toInt();
-    readSetting.endGroup();
-
-    ui->leOsdWord->setText(sOSDDeviceName);
-    ui->cbxOSDFont->setCurrentText(sOSDFont);
-    ui->cbxOSDFontSize->setCurrentText(QString::number(iFontSize,10));
-    ui->leOSDLocationY->setText(QString::number(iOSDLocationY,10));
-    fullscreen.OSDText=ui->leOsdWord->text();
-    fullscreen.OSDFont=ui->cbxOSDFont->currentText();
-    fullscreen.OSDFontHeight=ui->cbxOSDFontSize->currentText().toInt() ;
-    fullscreen.OSDLocationY=ui->leOSDLocationY->text().toInt();
-*/
-
     readSetting.beginGroup("MOUNTPOS");
     mGD1MountPosX = readSetting.value("GD1MOUNTX").toDouble();
     mGD1MountPosY = readSetting.value("GD1MOUNTY").toDouble();
@@ -4921,14 +3300,6 @@ int MainWindow::readCfgFile()
     ui->lePidMinOut->setText(QString::number(mPidMinOut));
     ui->lePtzDefSpeed->setText(QString::number(mPtzDefSpeed));
 
-//    readSetting.beginGroup("IR_DETECTION");
-//    irConfig.tarLmax = readSetting.value("TarLmax", 9).toInt();
-//    irConfig.k1 = readSetting.value("K1", 2).toInt();
-//    irConfig.k2 = readSetting.value("K2", 1).toInt();
-//    irConfig.scoreThreshold = readSetting.value("ScoreThreshold", 3.0).toFloat();
-//    readSetting.endGroup();
-
-
     return 0;
 }
 
@@ -4971,15 +3342,6 @@ void MainWindow::writeCfgFile()
     setting.setValue("CentroidWhMax",0);
     setting.setValue("CentroidBlkMin",0);
     setting.endGroup();
-#if 0
-    setting.beginGroup("OSD");
-    setting.setValue("OSDDeviceName", ui->leOsdWord->text());
-    setting.setValue("OSDFont", ui->cbxOSDFont->currentText());
-    setting.setValue("OSDFontSize", ui->cbxOSDFontSize->currentText());
-    setting.setValue("OSDLocationY", ui->leOSDLocationY->text());
-    setting.endGroup();
-#endif
-
     setting.beginGroup("MOUNTPOS");
     setting.setValue("GD1MOUNTX", ui->leGd1InstallX->text().toLatin1());
     setting.setValue("GD1MOUNTY", ui->leGd1InstallY->text().toLatin1());
@@ -5028,13 +3390,6 @@ void MainWindow::writeCfgFile()
 
     PIDInit2(&PidX,0,mPid_X_Scale,mPid_X_P,mPid_X_I,mPid_X_D,mPidMaxOut);
     PIDInit2(&PidY,0,mPid_Y_Scale,mPid_Y_P,mPid_Y_I,mPid_Y_D,mPidMaxOut);
-
-//    setting.beginGroup("IR_DETECTION");
-//    setting.setValue("TarLmax", irConfig.tarLmax);
-//    setting.setValue("K1", irConfig.k1);
-//    setting.setValue("K2", irConfig.k2);
-//    setting.setValue("ScoreThreshold", irConfig.scoreThreshold);
-//    setting.endGroup();
 }
 
 char * MainWindow::rtrim(char *str)
@@ -5150,26 +3505,12 @@ void MainWindow::on_le_setPitch_returnPressed()
     on_pbSendPitch_clicked();
 }
 
-/*
-void MainWindow::on_pbFullScreen_clicked()
-{
-
-    //fullscreen.showFullScreen();//全屏
-    fullscreen.show();
-    fullscreen.grabKeyboard();
-    this->hide();
-}
-*/
-
-
 void MainWindow::slotGetSigBackToMainWin()
 {
-   // if(connectFlag == true)
     {
         mPlayer->runflag=false;
         fullscreen.close();
     }
-    //delete(mPlayer);
 }
 
 void MainWindow::slotGetUpdateJoystick()
@@ -5194,19 +3535,12 @@ void MainWindow::slotUpdateTrackingBox(int num,int x,int y,int width,int height)
         pnetworkComm->msgToZhiKong.roiHeight = roiBox.height = 40;
         //trackerThd->bTrackerStart = false;
         pnetworkComm->msgToZhiKong.status = 4;
-
-        // 切换回TopHat算法继续搜索
         if(trackerThd->trackingMethod == TRACKING_METHOD_IR_SMALL)
         {
             trackerThd->trackingMethod = TRACKING_METHOD_TOPHAT706;
-             // PIDReset2(&PidX);
-             // PIDReset2(&PidY);
         }
-        // ui->cbxStartTracking->setChecked(false);
         on_pbStop_pressed();
         ui->lblTrackingFps->setText("0");
-        // PIDReset2(&PidX);
-        // PIDReset2(&PidY);
         ui->te_Output->append("跟踪状态：丢失");
 
         return;
@@ -5241,26 +3575,11 @@ void MainWindow::slotUpdateTrackingBox(int num,int x,int y,int width,int height)
     // 计算目标偏差（像素）
     int diff_x = xx + roiBox.width/2 - IMAGE_PIXEL_WIDTH/2 ;
     int diff_y = yy + roiBox.height/2 - IMAGE_PIXEL_HEIGHT/2 ;
-    //qDebug()<<"Recv tracking Rect diff_x:" << diff_x<< " diff_y:" << diff_y <<" PidX.SumError:"<<PidX.SumError;
-    //伺服测试
     QString timestamp = QDateTime::currentDateTime().toString("yyyy-MM-dd hh:mm:ss.zzz");
-    // qDebug() << "报脱靶量时间:" << timestamp<<"目标偏差x："<<diff_x<<"目标偏差y："<<diff_y;
-    //打开文件并写入数据（追加模式）
-    // QFile file("pid_x.txt");
-    // if (file.open(QIODevice::WriteOnly | QIODevice::Append | QIODevice::Text)) {
-    //     QTextStream out(&file);
-    //     out << timestamp << " " <<diff_x<< "\n";
-    //     file.close();
-    // }
-
     // PID控制计算
     int x_out,y_out;
     x_out=-(signed short)PIDCalc3(&PidX,diff_x);
     y_out=(signed short)PIDCalc3(&PidY,diff_y);
-    //qDebug()<<"1 x_out:" << x_out<< " y_out:" << y_out;
-    //ui->lbSendUdpDataA->setText( QString::number(PidX.SumError,'f',0));
-    //ui->lbSendUdpDataE->setText( QString::number(diff_y));
-
     double kh=0;
     int lensVal = 0;
     if(ui->rb_selGDA->isChecked())
@@ -5306,34 +3625,9 @@ void MainWindow::slotUpdateTrackingBox(int num,int x,int y,int width,int height)
             kh=30;             //3°*100=300
         break;
     }
-    //double am = kh/(double)0x200;
-    // 根据镜头焦距调整控制增益
-
     x_out = x_out * kh;
     y_out = y_out * kh;
-    //qDebug()<<"2 x_out:" << x_out<< " y_out:" << y_out <<"  kh:" << kh;
-    //qDebug()<<"kh:" << kh;
-    // 死区处理
-
-    // if(diff_x>3 && x_out == 0)
-    // {
-    //     x_out=1;
-    // }
-    // else if(diff_x<-3 && x_out == 0)
-    // {
-    //     x_out=-1;
-    // }
-    // if(diff_y>5 && y_out == 0)
-    // {
-    //     y_out=-1;
-    // }
-    // else if(diff_y<-5 && y_out == 0)
-    // {
-    //     y_out=1;
-    // }
-
-
-
+ 
     // 发送控制命令
     if( true == ui->cbxStartTracking->isChecked() )
     {
@@ -5343,29 +3637,6 @@ void MainWindow::slotUpdateTrackingBox(int num,int x,int y,int width,int height)
 
         if(y_out>32768) y_out = 32768;
         else if(y_out<-32768) y_out = -32768;
-
-        //706测试-伺服正弦信号
-        // 限幅处理前先赋值测试值
-        // static double angle = 0.0;  // 静态变量保持角度值
-        // const double amplitude = 10000.0;  // 正弦波幅度
-        // const double y_fixed = 0;    // y固定值
-
-        // 生成正弦值 (x_out)
-        // angle += 0.1;  // 每次增加的角度（控制频率）
-        // if(angle > 2*M_PI) angle -= 2*M_PI;  // 保持在0-2π范围内
-
-        // x_out = amplitude * sin(angle);  // 正弦波输出
-        // y_out = y_fixed;                // y固定值
-
-        // QString timestamp = QDateTime::currentDateTime().toString("yyyy-MM-dd hh:mm:ss.zzz");
-        // qDebug() << "报伺服指令时间:" << timestamp<<"x_out："<<x_out<<"y_out："<<y_out;
-        // //打开文件并写入数据（追加模式）
-        // QFile file("pid_send.txt");
-        // if (file.open(QIODevice::WriteOnly | QIODevice::Append | QIODevice::Text)) {
-        //     QTextStream out(&file);
-        //     out << timestamp << " " <<x_out<< "\n";
-        //     file.close();
-        // }
 
         uint8_t * cmd = mPodCmd.crtSteplessCmd(x_out, y_out);//给伺服发速度指令
         // udpskt->write((char *)cmd,7);
@@ -5378,72 +3649,10 @@ void MainWindow::slotUpdateTrackingBox(int num,int x,int y,int width,int height)
         {
             udpSocket_B->write((char *)cmd,7);
         }
-
-
-        //706测试正弦发送位置指令
-        // static double angle = 0.0;
-        // const double centerDir = 30.0;  // 中心角度30°
-        // const double amplitude = 10.0;  // 幅度±10° → 范围20°~40°
-        // const float fixedPitch = 10;
-
-        // 更新正弦波角度
-        // angle += 0.2;  // 调整步长改变速度
-        // if (angle > 2 * M_PI) angle -= 2 * M_PI;
-        // 计算正弦波方位角（20°~40°）
-        // float sinDirection = centerDir + amplitude * sin(angle);
-        // sendPosition(sinDirection, fixedPitch,true,true);//给伺服发位置指令
-        // QString timestamp = QDateTime::currentDateTime().toString("yyyy-MM-dd hh:mm:ss.zzz");
-        // qDebug() << "报伺服位置指令时间:" << timestamp<<"方位："<<sinDirection<<"俯仰："<<fixedPitch;
-        //打开文件并写入数据（追加模式）
-        // QFile file("pid_send.txt");
-        // if (file.open(QIODevice::WriteOnly | QIODevice::Append | QIODevice::Text)) {
-        //     QTextStream out(&file);
-        //     out << timestamp << " " <<sinDirection<< "\n";
-        //     file.close();
-        // }
-
-
-
-        //uint8_t * cmd = mPodCmd.crtSteplessCmd(x_out*10, y_out*10);
-
-        // QByteArray cmdData(reinterpret_cast<const char*>(cmd), 7); // 假设长度是7字节
-        // qDebug() << "给伺服发送指令:" << cmdData.toHex(' '); // 用空格分隔每个字节
-        // QString timestamp = QDateTime::currentDateTime().toString("yyyy-MM-dd hh:mm:ss.zzz");
-        // qDebug() << "给伺服发送时间:" << timestamp<<"目标偏差x："<<diff_x<<"目标偏差y："<<diff_y;
-
-
-
-
-        //测试延时
-        // QString timeStr2 = QDateTime::currentDateTime().toString("yyyy-MM-dd hh:mm:ss.zzz");
-        // //打开文件并写入数据（追加模式）
-        // QFile file("pid_log.txt");
-        // if (file.open(QIODevice::WriteOnly | QIODevice::Append | QIODevice::Text)) {
-        //     QTextStream out(&file);
-        //     out << timeStr2 << " " << "\n";
-        //     file.close();
-        // }
-
-
-
-       /* if( ui->rb_selGDA->isChecked())
-        {
-            QString qstr ="光电A 目标 方位: " + QString::number(mPtzDirection_A,'f',2) + " 俯仰: "+ QString::number(mPtzPitch_A,'f',2);
-            ui->te_Output->append(qstr);
-        }
-        else
-        {
-            QString qstr ="光电B 目标 方位: " + QString::number(mPtzDirection_B,'f',2) + " 俯仰: "+ QString::number(mPtzPitch_B,'f',2);
-            ui->te_Output->append(qstr);
-        } */
-
     }
 
     auto end = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double, std::milli> elapsed = end - start;
-
-    //qDebug() << "pid计算耗时:" << elapsed.count() << "ms";
-
 
     ui->lblTrackingFps->setText(QString::number(trackerThd->fps));
 }
@@ -5453,7 +3662,6 @@ void MainWindow::slotUpdateTrackingBoxDeg(int num,int x,int y,int width,int heig
     QUdpSocket * udpskt = getCurMainPTZ();
     if( udpskt == NULL) return;
 
-    //qDebug()<<"slotUpdateTrackingBoxDeg() num:"<< num<<"   x:"<< x<<"   y:"<< y <<"   width:"<< width <<"   height:"<< height;
     if(num == 0)
     {
         trackerThd->bTrackerStart = false;
@@ -5461,14 +3669,10 @@ void MainWindow::slotUpdateTrackingBoxDeg(int num,int x,int y,int width,int heig
         on_pbStop_pressed();
         ui->cbxStartTracking->setChecked(false);
         ui->lblTrackingFps->setText("0");
-        // PIDReset2(&PidX);
-        // PIDReset2(&PidY);
         ui->te_Output->append("跟踪状态：丢失");
         return;
     }
     pnetworkComm->msgToZhiKong.status = 3;
-    //LabStatebarInfo->setText("跟踪状态：正在跟踪");
-
     float dtx = 0 ;
     float dty = 0 ;
     float scr_du = 0;
@@ -5499,41 +3703,22 @@ void MainWindow::slotUpdateTrackingBoxDeg(int num,int x,int y,int width,int heig
 
         x_out = dtx/0.002;
         y_out = dty/0.002;
-
-
-        /*if(ui->rb_flipPicOn->isChecked())
-        {
-            uint8_t * cmd = mPodCmd.crtOffsetCmd(-(x_out), -(y_out));
-            udpskt->write((char *)cmd,7);
-        }
-        else */
         {
             uint8_t * cmd = mPodCmd.crtOffsetCmd(x_out, y_out);
             udpskt->write((char *)cmd,7);
         }
-
-        //ui->lbSendUdpDataA->setText( QString::number(dtx, 'f',2)+"°" );
-        //ui->lbSendUdpDataE->setText( QString::number(dty, 'f',2)+"°" );
     }
 }
 
 void MainWindow::slotUpdateDetectingBox(int num,int id,int x,int y,int width,int height,float prob)
 {
-    //qDebug()<<"slotUpdateDetectingBox() num:"<< num<<"  id"<<id<<"   x:"<< x<<"   y:"<< y<<"   prob:"<< prob ;
-
     if(num == 0 )
     {
-        //qDebug()<<"slotUpdateDetectingBox() num:"<< num<<"  id"<<id<<"   x:"<< x<<"   y:"<< y<<"   prob:"<< prob <<" autoStat:"<<autofilmThd->autoStat;
-        //autofilmThd->mDetect.prob = prob;
         return ;
     }
     if(ui->rb_SelDetectMtd1->isChecked()) {
         slotUpdateTrackingBox(num, x*4, y*4, width*4, height*4);
     } /*else if(ui->rb_SelIRSmallTarget->isChecked()) {
-        // 小目标检测处理
-        //slotUpdateTrackingBox(num, x, y, width, height);
-        update();
-    }*/
 }
 
 /*
@@ -5995,10 +4180,8 @@ int MainWindow::sendPTZStepless(short direction,short pitch,int hdFocal,int hdZo
 
 void MainWindow::on_rb_trackStick_clicked()
 {
-    //trackerThd->trackingMethod = TRACKING_METHOD_NONE;
     pnetworkComm->msgToZhiKong.status = 0;
     operateMode = OPMODE_STICK;
-//    sendSetCmd(PKT_TYPE_PTZSTOP,0);
     if(connectFlag_A != false)
     {
         udpSocket_A->write((char *)ptzCmdStop,sizeof(ptzCmdStop));
@@ -6007,30 +4190,14 @@ void MainWindow::on_rb_trackStick_clicked()
     {
         udpSocket_B->write((char *)ptzCmdStop,sizeof(ptzCmdStop));
     };
-
-    //pTheo_PP_DLL->stopLead()
-    //ui->gbx_RoiSize->setEnabled(false);
     ui->lblPad->setCursor(Qt::ArrowCursor);
-/*
-    if(1 == btnStatus)
-    {
-        btnStatus = 2;
-        sendCmd();
-    }*/
     on_rb_HGyroUnLock_clicked();
     ui->rb_HGyroUnLock->setChecked(true);
 }
 
 void MainWindow::on_rb_trackTable_clicked()
-{/*
-    operateMode=OPMODE_THEO;
-    dd_diffx=0;
-    dd_diffy=0;*/
-    //pTheo_PP_DLL->startLead();
-    //ui->checkBoxTheoGuid->setEnabled(true);
-    //ui->checkBoxCenterGuid->setEnabled(false);
-    //ui->checkBoxTheoGuid->setChecked(false);
-    //ui->checkBoxCenterGuid->setChecked(false);
+{
+
 }
 
 void MainWindow::on_rb_toZero_clicked()
@@ -6041,9 +4208,6 @@ void MainWindow::on_rb_toZero_clicked()
     udpskt->write((char *)S9ToZero ,sizeof(S9ToZero));
 
     operateMode=OPMODE_TOZERO;
-
-    //on_rb_HGyroUnLock_clicked();
-    //ui->rb_HGyroUnLock->setChecked(true);
 }
 
 void MainWindow::on_rb_Tracking_clicked()
@@ -6061,46 +4225,31 @@ void MainWindow::on_rb_Center_clicked()
 }
 
 void MainWindow::on_rb_KcfMarking_clicked()
-{qDebug()<<"on_rb_KcfMarking_clicked";
+{
+    qDebug()<<"on_rb_KcfMarking_clicked";
     operateMode = OPMODE_MARKING;
-    //trackerThd->trackingMethod = TRACKING_METHOD_KCF;
-    //ui->gbx_RoiSize->setEnabled(true);
     ui->lblPad->setCursor(Qt::ArrowCursor);
-/*    if(1 == btnStatus)
-    {
-        btnStatus = 2;
-        sendCmd();
-    }*/
 }
 
 void MainWindow::on_rb_TopHatMarking_clicked()
 {
-    //trackerThd->trackingMethod = TRACKING_METHOD_TOPHAT;
     operateMode = OPMODE_MARKING;
-    //ui->gbx_RoiSize->setEnabled(false);
     ui->lblPad->setCursor(Qt::ArrowCursor);
     btnStatus = 0;
-    //trackerThd->bTrackerStart = true;
 }
 
 void MainWindow::on_rb_WhCentroidMarking_clicked()
 {
-    //trackerThd->trackingMethod = TRACKING_METHOD_CENTROIDWH;
     operateMode = OPMODE_MARKING;
-    //ui->gbx_RoiSize->setEnabled(false);
     ui->lblPad->setCursor(Qt::ArrowCursor);
     btnStatus = 0;
-    //trackerThd->bTrackerStart = true;
 }
 
 void MainWindow::on_rb_BlkCentroidMarking_clicked()
 {
-    //trackerThd->trackingMethod = TRACKING_METHOD_CENTROIDBLK;
     operateMode = OPMODE_MARKING;
-    //ui->gbx_RoiSize->setEnabled(false);
     ui->lblPad->setCursor(Qt::ArrowCursor);
     btnStatus = 0;
-    //trackerThd->bTrackerStart = true;
 }
 
 void MainWindow::on_leOsdWord_textChanged(const QString &arg1)
@@ -6110,58 +4259,12 @@ void MainWindow::on_leOsdWord_textChanged(const QString &arg1)
 
 void MainWindow::on_pbOsdWordSave_clicked()
 {
-#if 0
-    writeCfgFile();
-    fullscreen.OSDText=ui->leOsdWord->text();
-    fullscreen.OSDFont=ui->cbxOSDFont->currentText();
-    fullscreen.OSDFontHeight=ui->cbxOSDFontSize->currentText().toInt() ;
-    fullscreen.OSDLocationY=ui->leOSDLocationY->text().toInt();
-#endif
+
 }
 
 bool MainWindow::openSerialPort()
 {
-    //QString commServo=mServoCom;
     QString commServo="COM3";
-/*
-    //打开串口
-    QList<QSerialPortInfo> listComms;//获取COM口列表
-    listComms=QSerialPortInfo::availablePorts();
-    if(0==listComms.size())
-    {
-        titleLabel->setText("未发现串口！不能接收数据交互！");
-        qDebug()<<("未发现串口！不能接收数据交互 ");
-        return false;
-    }
-    else
-    {
-        //ui->txtAppMsg->appendPlainText("串口配置：");
-        int nCentrComIdx=-1;
-        for(int i=0; i<listComms.size(); i++)
-        {
-            ui->comboCenterCom->addItem(listComms.at(i).portName());
-            if (commServo==listComms.at(i).portName())
-                nCentrComIdx=i;
-        }
-        if (nCentrComIdx==-1)//没找到，则用现有的第一个串口
-        {
-            if (listComms.size()>0)
-            {
-                commServo=listComms.at(0).portName();
-                ui->comboCenterCom->setCurrentIndex(0);
-            }
-            else
-            {
-                titleLabel->setText("未找到可用串口");
-                return false;
-            }
-        }
-        else
-        {
-            ui->comboCenterCom->setCurrentIndex(nCentrComIdx);
-        }
-    } */
-
     if (!commServo.isEmpty())
     {
         SerialPort.setPortName((const QString &)commServo);
@@ -6173,7 +4276,6 @@ bool MainWindow::openSerialPort()
         mnBufIdx=0;
         mbCenterAsk=false;
 
-        //connect(&this->SerialPort,SIGNAL(readyRead()),this,SLOT(recvComData()));
         if(SerialPort.open(QIODevice::WriteOnly))   //打开串口，并设置串口为只读模式
         {
             mpSendBuf=new char[sizeof(CommFrame)];
@@ -6205,40 +4307,6 @@ int BCDToInt(unsigned char value)
     return temp;
 }
 
-#if 0
-int MainWindow::recvComData()
-{
-   int len=0;
-    QByteArray ba;
-    //SerialPort.readBufferSize();
-    ba = SerialPort.readAll();
-
-    len = ba.length();
-    //qDebug()<<"len:"<<len<<"    "<<ba;
-
-/*    printf("%02x %02x %02x %02x	 %02x %02x %02x %02x %02x \
-                 %02x %02x %02x  %02x %02x %02x %02x\n", (ba.at(0)) & 0xff, (ba.at(1)) & 0xff, (ba.at(2)) & 0xff, (ba.at(3)) & 0xff,
-           (ba.at(4)) & 0xff, (ba.at(5)) & 0xff, (ba.at(6)) & 0xff, (ba.at(7)) & 0xff,(ba.at(8)) & 0xff,
-           (ba.at(9)) & 0xff, (ba.at(10)) & 0xff, (ba.at(11)) & 0xff, (ba.at(12)) & 0xff,(ba.at(13)) & 0xff,
-           (ba.at(14)) & 0xff, (ba.at(15)) & 0xff);
-    std::cout << std::endl;
-*/
-    if(len == 16 && ((ba.at(0)&0xff) == 0x7e && ((ba.at(15)&0xff) == 0xe7)))
-    {
-
-        int h=BCDToInt((ba.at(4)) & 0xff);
-        int m=BCDToInt((ba.at(5)) & 0xff);
-        int s=BCDToInt((ba.at(6)) & 0xff);
-        int ms=((ba.at(7)<<8)+(ba.at(8) & 0xff))*2;
-        //qDebug()<<"time "<<h<<":"<<m<<":"<<s<<":"<<ms;
-        ui->lbl_BjTime->setText(QString::number(h,10)+":"+QString::number(m,10)+":"+QString::number(s,10)+"."+QString::number(ms,10));
-        CurTime.setHMS(h,m,s,ms);
-    }
-
-    return len;
-}
-#endif
-
 int MainWindow::recvComData()
 {
 #if 1
@@ -6246,11 +4314,6 @@ int MainWindow::recvComData()
 
     mzRecvBuf.append(SerialPort.readAll());
     int nLen=mzRecvBuf.length();
-
-//	QString sTmp;
-//	for (int i=0; i<nLen; ++i)
-//		sTmp.append(QString(" %1").arg(uchar(mzRecvBuf.at(i)), 2, 16, QChar('0')));
-//	ui->lblInfo->setText(QString::number(nLen) +":" + sTmp);//Debug
 
     if (nLen<(int)sizeof(CommFrame))
         return -1;
@@ -6276,60 +4339,6 @@ int MainWindow::recvComData()
 
     if (!bSucEver)//只要有一次成功，则mGuideData就是有效数据；如果多次成功，则mGuideData是最后一次数据，也就是最新数据
         return 0;
-    /*if(operateMode == OPMODE_CENTER )
-    {
-        double angleA, angleE;
-        if (ui->rb_StickSpeedH->isChecked())
-        {
-            angleA = mCenterGuide.dblA + mAEJoyCorrect.dblA*4;//中心引导修正8°
-            angleE = mCenterGuide.dblE + mAEJoyCorrect.dblE*4;
-        }
-        else if (ui->rb_StickSpeedM->isChecked())
-        {
-            angleA = mCenterGuide.dblA + mAEJoyCorrect.dblA*2;//中心引导修正4°
-            angleE = mCenterGuide.dblE + mAEJoyCorrect.dblE*2;
-        }
-        else
-        {
-            angleA = mCenterGuide.dblA;//中心引导
-            angleE = mCenterGuide.dblE;
-        }
-
-        if(angleA >=360 ) angleA-=360;
-        else if(angleA <0) angleA+=360;
-        //mPtzCam.SetAEPos(angleA, angleE);//发到经纬仪
-        sendPosition2(angleA, angleE);//发到经纬仪
-    }
-
-    QTime localSystime = QTime::currentTime();
-    if (mbCenterAsk)
-    {
-        CommSendToCenterRAE(mcSID, localSystime, ui->checkBoxCaught->isChecked(), mCenterGuide.dblR, ptzDirection, ptzPitch);
-        mbCenterAsk=false;
-    }
-
-    //以下为显示中心数据、实际-中心、中心-理论
-    ui->lblCenterT->setText(mCenterGuide.tTime.toString("hh:mm:ss.zzz"));
-    ui->lblCenterR->setText(QString::number(mCenterGuide.dblR/1000.0, 'f', 3)+"km");
-    ui->lblCenterA->setText(QString::number(mCenterGuide.dblA, 'f', 3));
-    ui->lblCenterE->setText(QString::number(mCenterGuide.dblE, 'f', 3));
-    ui->lblRealCenterA->setText(QString::number(ptzDirection-mCenterGuide.dblA, 'f', 3));
-    ui->lblRealCenterE->setText(QString::number(ptzPitch-mCenterGuide.dblE, 'f', 3));*/
-#if 0
-    if(pTheo_PP_DLL->m_bLoadFile_Valid)//解决打开加载理论弹道对话框时显示超大数值问题
-    {
-        SRC_DATA dataSrc;
-        RET_DATA dataRet;
-        dataSrc.T0 = QTime(0,0,0);//中心会下发，按实际赋值
-        //dataSrc.time = localSystime;//mCenterGuide.tTime;	//改为取系统时间
-        dataSrc.T0_Valid = false;//中心停止发送T0后，置为fasle  正在发送置为true  中心会连续发送10s
-        dataSrc.iCurMcLeadMode = 0;//默认填0
-        pTheo_PP_DLL->GetResult(dataSrc, dataRet);
-        //ui->lblCenterTheoA->setText(QString::number(mCenterGuide.dblA-dataRet.A, 'f', 3));
-        //ui->lblCenterTheoE->setText(QString::number(mCenterGuide.dblE-dataRet.E, 'f', 3));
-    }
-#endif
-    //ui->lblCenterDelay->setText(QString::number(mCenterGuide.tTime.msecsTo(localSystime))+"ms");//中心时延
 }
 
 bool MainWindow::ParseCommData(int nIdx)
@@ -6349,9 +4358,6 @@ bool MainWindow::ParseCommData(int nIdx)
     if (pFrame->cType==DATATYPE_T0)
     {
         mCenterGuide.tTime=QTime::fromMSecsSinceStartOfDay(pFrame->nTime);//T, ms
-#if 0
-        pTheo_PP_DLL->setT0_Center(QTime::fromMSecsSinceStartOfDay(pFrame->data.dataT0.nT0));
-#endif
     }
     else if (pFrame->cType==DATATYPE_RAE)
     {
@@ -6400,68 +4406,14 @@ bool MainWindow::ParseCommData(int nIdx)
     return true;
 }
 
-#if 0
-//dblR m
-//dblA °
-//dblE °
-void MainWindow::CommSendToCenterRAE(uchar cDID, const QTime &tTime, bool bCaught, double dblR, double dblA, double dblE)
-{
-    if (mpSendBuf==nullptr)
-        return;
-    CommFrame * pFrame=(CommFrame*)mpSendBuf;
-    pFrame->cHead=DATA_HEAD;
-    pFrame->cSID=mcDevID;
-    pFrame->cDID=cDID;
-    pFrame->cType=DATATYPE_RAE;
-    pFrame->cValid=bCaught;
-    ++pFrame->cLoopNo;
-    pFrame->nCRC=0;
-    pFrame->nTime=(uint32_t)tTime.msecsSinceStartOfDay();
-
-    pFrame->data.dataRAE.nR=(uint32_t)(dblR*10+0.5);//*10为m->0.1m，+0.5为四舍五入
-
-    if (dblA>=360)
-        dblA-=360;
-    else if (dblA<0)
-        dblA+=360;
-    pFrame->data.dataRAE.nA=(uint32_t)(dblA*36000.0+0.5);
-
-    if (dblE>=190)
-        dblE=180-dblE;
-    if (dblE>=0)
-        pFrame->data.dataRAE.nE=(int32_t)(dblE*36000.0+0.5);
-    else
-        pFrame->data.dataRAE.nE=(int32_t)(dblE*36000.0-0.5);
-
-    ushort nCrc=0;
-    for (uint i=0; i<sizeof(CommFrame); i++)
-        nCrc+=(uchar)mpSendBuf[i];
-    pFrame->nCRC=nCrc;
-
-    SerialPort.write(mpSendBuf, sizeof(CommFrame));
-    //ui->lblInfo->setText(QString::number(uint(pFrame->cLoopNo)));
-    //titleLabel->setText(QString::number(uint(pFrame->cLoopNo)));
-    //ui->lblToCenterComLoop->setText(QString::number(uint(pFrame->cLoopNo)));
-}
-#endif
-
 int MainWindow::sendServoComm(double dblGd1A, double dblGd1E,double dblGd2A, double dblGd2E,int coverflag)
 {
     if(pnetworkComm->servo422ConnectFlag == false)  return 100;
-
-    //unsigned int loopno = pnetworkComm->msgToServo422.loopNo;
-
     pnetworkComm->msgToServo422.loopNo++;
     pnetworkComm->msgToServo422.gd1FangWei.fData = dblGd1A;
     pnetworkComm->msgToServo422.gd1FuYang.fData = dblGd1E;
     pnetworkComm->msgToServo422.gd2FangWei.fData = dblGd2A;
     pnetworkComm->msgToServo422.gd2FuYang.fData = dblGd2E;
-
-
-    /*pnetworkComm->msgToServo422.gd1FangWei.fData = 123.12; //0x01020304;
-    pnetworkComm->msgToServo422.gd1FuYang.fData = 23.23;    //0x0a0b0c0d;
-    pnetworkComm->msgToServo422.gd2FangWei.fData = 123.12; //0x01020304;
-    pnetworkComm->msgToServo422.gd2FuYang.fData = 56.56;  //0x0a0b0c0d;*/
     pnetworkComm->convComm422PktToByte();
     pnetworkComm->sendServoPktCnt++;
     SerialPort.write((char *)pnetworkComm->pktToServo422, sizeof(pnetworkComm->pktToServo422));
@@ -6482,42 +4434,6 @@ void MainWindow::on_rb_StickSpeedL_clicked()
 {
     speedGear=0;
 }
-
-#if 0
-void MainWindow::on_pbSSetDiffY_clicked()
-{
-    QMessageBox::StandardButton button;
-    button = QMessageBox::question(this, tr("调整补偿"),
-        QString(tr("警告：俯仰补偿将会修改，是否继续?")),
-        QMessageBox::Yes | QMessageBox::No);
-
-    if (button == QMessageBox::Yes) {
-        //dd_diffy_default=ui->le_setPitchDiff->text().toDouble();
-        dd_diffy = dd_diffy_default_A;
-        writeCfgFile();
-    }
-    else
-    {
-        char str[64];
-        sprintf(str,"%.3f",dd_diffy);
-        //ui->le_setPitchDiff->setText(str);
-    }
-}
-#endif
-
-#if 0
-void MainWindow::on_pbResetDiffY_clicked()
-{
-
-    dd_diffy = dd_diffy_default;
-    char str[64];
-    sprintf(str,"%.3f",dd_diffy);
-    //ui->le_setPitchDiff->setText(str);
-
-    dd_diffx=0;
-
-}
-#endif
 
 void MainWindow::timerRecFileSeg_timeOut()
 {
@@ -6564,12 +4480,10 @@ void MainWindow::on_leCenterCom_textChanged(const QString &arg1)
 
 void MainWindow::on_sldVidEnhance_valueChanged(int value)
 {
-    //ui->lbVidEnhanceVal->setText(QString::number(value));
 }
 
 void MainWindow::on_sldVidBright_valueChanged(int value)
 {
-    //ui->lbVidBrightVal->setText(QString::number(value));
 }
 
 void MainWindow::on_cbxDispOSDTime_clicked(bool checked)
@@ -6773,8 +4687,6 @@ void MainWindow::chkIfOffline_timeOut()
         connectGyroBc();
     }
     recvGyroPktNum_last = pGyroComm->recvPacketCnt;
-
-    //autoAdjZoomFocal(roiBox.width); //在跟踪时自动变焦调整视场角
     return;
 }
 
@@ -6794,10 +4706,6 @@ void MainWindow::zhiKongSocket_timeOut()
 
 
     distance = pnetworkComm->msgFromZhiKong.zkDistence;
-
-//    qDebug() << "zkDistence:" << distance << "m, 时间:"
-//             << QDateTime::currentDateTime().toString("hh:mm:ss.zzz");
-
     if(ui->cbxSetDbgDistance->isChecked())  //调试或者校标用
     {
         distance = ui->leSetDbgDistance->text().toDouble();
@@ -6820,7 +4728,6 @@ void MainWindow::zhiKongSocket_timeOut()
         gd2ToRadarA = mPtzDirection_B;
         gd2ToRadarE = mPtzPitch_B;
     }
-//gd1ToRadarE = gd1ToRadarE -1;
     // 通过串口发送给天线伺服系统
     sendServoComm(gd1ToRadarA,gd1ToRadarE, gd2ToRadarA,gd2ToRadarE,0);
 
@@ -6947,7 +4854,6 @@ void MainWindow::on_pbDbgSend_clicked()
 
     QByteArray array = QByteArray::fromHex(ui->le_dbgSend->text().toLatin1());
 
-    //qDebug()<<" cmd:"<<"  barr:"<<array.toHex(' ')<<"   lenth:"<<array.length();
     for(int i=0;i<array.length();i++)
     {
         blkCmd[i] = array.data()[i];
@@ -6992,7 +4898,6 @@ void MainWindow::on_pbExpUp_clicked()
     QUdpSocket * udpskt = getCurMainPTZ();
     if( udpskt == NULL) return;
     udpskt->write((char *)hdExpoCompAdd ,sizeof(hdExpoCompAdd));
-    //udpSocket->write((char *)hdGainAdd ,sizeof(hdGainAdd));
 }
 
 void MainWindow::on_pbExpDown_clicked()
@@ -7000,7 +4905,6 @@ void MainWindow::on_pbExpDown_clicked()
     QUdpSocket * udpskt = getCurMainPTZ();
     if( udpskt == NULL) return;
     udpskt->write((char *)hdExpoCompDec ,sizeof(hdExpoCompDec));
-    //udpSocket->write((char *)hdGainDec ,sizeof(hdGainDec));
 }
 
 void MainWindow::on_pbExpReset_clicked()
@@ -7008,7 +4912,6 @@ void MainWindow::on_pbExpReset_clicked()
     QUdpSocket * udpskt = getCurMainPTZ();
     if( udpskt == NULL) return;
     udpskt->write((char *)hdExpoCompReset ,sizeof(hdExpoCompReset));
-    //udpSocket->write((char *)hdGainReset ,sizeof(hdGainReset));
 }
 
 void MainWindow::on_rb_flipPicOff_clicked()
@@ -7137,11 +5040,9 @@ void MainWindow::on_cbx_backLightMode_currentIndexChanged(int index)
 
 void MainWindow::on_pbSetDirection_clicked()
 {
-// #if 0
     QUdpSocket * udpskt = getCurMainPTZ();
     if( udpskt == NULL) return;
     udpskt->write((char *)S9ResetDirection ,sizeof(S9ResetDirection));
-// #endif
 }
 
 void MainWindow::on_pbSetPitch_clicked()
@@ -7223,7 +5124,6 @@ void MainWindow::on_pbToZero_clicked()
     {
         udpSocket_B->write((char *)S9ToZero ,sizeof(S9ToZero));
     }
-    //operateMode=OPMODE_STICK;
 }
 
 void MainWindow::on_vsld_SetBeiShu_valueChanged(int value)
@@ -7244,9 +5144,6 @@ void MainWindow::on_vsld_SetBeiShu_valueChanged(int value)
 
 void MainWindow::on_pbDbgSendBorderChk_clicked()
 {
-    //ui->rb_selGDB->setChecked(true);
-    //qDebug()<<"A:"<<ui->rb_selGDA->isChecked()<<"   B:"<<ui->rb_selGDB->isChecked();
-
     mPtzDirection_A =  QString(ui->leTestPan->text()).toDouble();
     mPtzDirection_B =  QString(ui->leTestTilt->text()).toDouble();
     chkCrossBorder();
@@ -7270,14 +5167,6 @@ void MainWindow::on_rb_SelDetectMtd2_clicked()
     trackerThd->bTrackerStart = true;
     trackerThd->trackingMethod = TRACKING_METHOD_TOPHAT706;
 }
-
-//void MainWindow::on_rb_SelIRSmallTarget_clicked() {
-//    trackerThd->trackingMethod = TRACKING_METHOD_IR_SMALL;
-//    operateMode = OPMODE_MARKING;
-//    trackerThd->bTrackerStart = true;
-
-//    // 设置检测参数
-//}
 
 //原文链接：https://blog.csdn.net/Y_Bingo/article/details/90345601
 bool MainWindow::CheckAppStatus(const QString &appName)
@@ -7339,12 +5228,6 @@ void MainWindow::on_pbcalcBlh2Rae_clicked()
     QVector3D vBlh;
 
     vBlh = QVector3D((float)poleWeiDu, (float)poleJingDu, (float)poleSiteGaoDu);
-    //QVector3D vRAE = mCoordTrsr.XyzEcef2Rae(vXyz);
-    /*QVector3D vRAE = mCoordTrsr.Blh_Blh_2Rae(vBlh);
-
-    mCenterGuide.dblR=vRAE.x();
-    mCenterGuide.dblA=vRAE.y();
-    mCenterGuide.dblE=vRAE.z(); */
     double x_mb=0,y_mb=0,z_mb=0;
 
     //大地BLH转地心系
@@ -7397,15 +5280,6 @@ void MainWindow::on_pbcalcBlh2Rae_clicked()
 
 void MainWindow::on_pbSetGD1Direction_clicked()
 {
-#if 0
-    double dirct = ui->leGD1Blh2A->text().trimmed().toDouble();
-    uint16_t direction = (uint16_t)(dirct * ANGLENET2DEG );
-    uint8_t cmd[]={0xff, 0x22, 0x00, 0x00, 0x00, 0x00, 0x22};       //置方位
-    cmd[2] = (direction>>8)& 0xff;
-    cmd[3] = (direction)& 0xff;
-    cmd[6] = 0xff & (cmd[1]+ cmd[2]+ cmd[3]+ cmd[4]+ cmd[5]);
-    udpSocket_A->write((char *)cmd ,sizeof(cmd));
-#endif
     double dirct = ui->leGD1Blh2A->text().trimmed().toDouble();
     dd_diffx_default_A = dirct - mRawPtzDirection_A;
     if(dd_diffx_default_A >= 360)   dd_diffx_default_A = dd_diffx_default_A - 360;
@@ -7414,15 +5288,6 @@ void MainWindow::on_pbSetGD1Direction_clicked()
 
 void MainWindow::on_pbSetGD2Direction_clicked()
 {
-#if 0
-    double dirct = ui->leGD2Blh2A->text().trimmed().toDouble();
-    uint16_t direction = (uint16_t)(dirct * ANGLENET2DEG );
-    uint8_t cmd[]={0xff, 0x22, 0x00, 0x00, 0x00, 0x00, 0x22};       //置方位
-    cmd[2] = (direction>>8)& 0xff;
-    cmd[3] = (direction)& 0xff;
-    cmd[6] = 0xff & (cmd[1]+ cmd[2]+ cmd[3]+ cmd[4]+ cmd[5]);
-    udpSocket_B->write((char *)cmd ,sizeof(cmd));
-#endif
     double dirct = ui->leGD2Blh2A->text().trimmed().toDouble();
     dd_diffx_default_B = dirct - mRawPtzDirection_B;
     if(dd_diffx_default_B >= 360)   dd_diffx_default_B = dd_diffx_default_B - 360;
@@ -7448,19 +5313,6 @@ void MainWindow::on_cbxStartTracking_stateChanged(int arg1)
     {
         if(ui->cbxStartTracking->isChecked() == true)
         {
-            //切换到KCF精确跟踪
-            // trackerThd->bTrackerStart = true;
-            // trackerThd->trackingMethod = TRACKING_METHOD_KCF;
-            // trackerThd->roi_min_width = roiBox.x;
-            // trackerThd->roi_min_height = roiBox.y;
-            // trackerThd->roi_width = roiBox.width;
-            // trackerThd->roi_height = roiBox.height ;
-            // trackerThd->boxChanged = true;
-            // PidX.enable_I_flag = false;
-            // PidY.enable_I_flag = false;
-            // timerDelayPid->start(2000);
-
-            // 切到IR_SMALL
             trackerThd->bTrackerStart = true;
             trackerThd->trackingMethod = TRACKING_METHOD_IR_SMALL;
             trackerThd->irParams.tarLmax = 15;
@@ -7470,19 +5322,16 @@ void MainWindow::on_cbxStartTracking_stateChanged(int arg1)
 
             trackerThd->roi_width_ = 320;  // IR算法ROI窗口
             trackerThd->roi_height_ = 256;
-            // 设置跟踪中心点（从TopHat检测结果中获得）
             cv::Point2f center = cv::Point2f(roiBox.x + roiBox.width/2,
                                             roiBox.y + roiBox.height/2);
             trackerThd->setCustomCenter(center);
             trackerThd->boxChanged = true;
-            // PID控制器设置
             PidX.enable_I_flag = false;
             PidY.enable_I_flag = false;
             timerDelayPid->start(2000);
         }
         else
         {
-//            sendSetCmd(PKT_TYPE_PTZSTOP,0);
             if(connectFlag_A != false)
             {
                 udpSocket_A->write((char *)ptzCmdStop,sizeof(ptzCmdStop));
@@ -7491,7 +5340,6 @@ void MainWindow::on_cbxStartTracking_stateChanged(int arg1)
             {
                 udpSocket_B->write((char *)ptzCmdStop,sizeof(ptzCmdStop));
             };
-            // 切换回TopHat搜索模式
             trackerThd->bTrackerStart = true;
             trackerThd->trackingMethod = TRACKING_METHOD_TOPHAT706;
         }
@@ -7512,16 +5360,13 @@ void MainWindow::on_rb_DefogOn_clicked()
 
 void MainWindow::quitAndShutdown()
 {
-    //system("shutdown -f -p");
     sendPosition(225.0, -20.0,true,false);
     sendPosition(45.0, -20.0,false,true);
     QThread::msleep(500);
     QProcess process(this);
     QString  str = "C:/WINDOWS/system32/shutdown.exe -f -p";
     process.startDetached(str);
-    //process.start(str);       //会随process close 而退出
     qDebug()<<"process:"<<str;
-    //QThread::msleep(1*1000);
     this->close();
 }
 
@@ -7597,27 +5442,3 @@ void MainWindow::on_pbAAdjDriftSave_clicked()
 
     udpskt->write((char *)S9SaveParam ,sizeof(S9SaveParam));
 }
-
-#if 0
-int MainWindow::predict_Radar_Target(double latest_direction,double latest_pitch,int latest_dist)
-{
-    gZhiKongGuideData_s[1].direction = gZhiKongGuideData_s[0].direction;
-    gZhiKongGuideData_s[1].pitch = gZhiKongGuideData_s[0].pitch;
-    gZhiKongGuideData_s[1].distance = gZhiKongGuideData_s[0].distance;
-    gZhiKongGuideData_s[1].timestamp = gZhiKongGuideData_s[0].timestamp;
-
-    gZhiKongGuideData_s[0].direction = latest_direction;
-    gZhiKongGuideData_s[0].pitch = latest_pitch;
-    gZhiKongGuideData_s[0].distance = latest_dist;
-    gZhiKongGuideData_s[0].timestamp = time(NULL);
-
-    if(gZhiKongGuideData_s[0].timestamp - gZhiKongGuideData_s[1].timestamp < 1 )    //连续引导中,不需要预测
-    {
-        return 0;
-    }
-
-
-
-    return 0;
-}
-#endif
